@@ -8,8 +8,8 @@ Cada fase termina con las pruebas en verde, la documentación actualizada y (sol
 | 1 | El usuario instala las herramientas; Stitch MCP + Context7 conectados; documentación del proyecto creada | Herramientas verificadas; Stitch accesible; docs en el repositorio |
 | 1b | Exploración del diseño en Stitch | ✅ Pantallas, tokens, componentes y pantallas faltantes documentados en `docs/DESIGN_SYSTEM.md` (2026-11-16) |
 | 2 | Resolver las preguntas financieras abiertas | ✅ `FINANCIAL_RULES.md`, `DATABASE_SCHEMA.md` y `DESIGN_SYSTEM.md` §10 aprobados (2026-11-17). Plan de Fases 3–4: `docs/superpowers/plans/2026-11-17-fundacion-y-dominio.md` |
-| 3 | Inicializar el proyecto Expo (SDK 58, TS strict, Expo Router), linter, Jest, estructura de carpetas, design tokens | El development build corre en el emulador |
-| 4 | Núcleo de dominio con TDD: dinero, reglas de movimientos, saldos, reportes | Pruebas unitarias y de invariantes en verde |
+| 3 | Inicializar el proyecto Expo (SDK 58, TS strict, Expo Router), linter, Jest, estructura de carpetas, design tokens | El development build corre en el emulador. **Parcial (2026-11-17):** proyecto, Jest, lint y `expo-dev-client` listos; la compilación nativa de Android sigue bloqueada por rutas largas de Ninja (ver `CURRENT_STATUS.md` §6). Design tokens: pendiente (Fase 6) |
+| 4 | Núcleo de dominio con TDD: dinero, reglas de movimientos, saldos, reportes | ✅ Tareas 3–11 del plan: 168 pruebas en verde, typecheck y lint limpios, `src/domain/` sin imports de React Native/Expo/PowerSync/Supabase (2026-11-17) |
 | 5 | Base local de PowerSync (sin servidor) + repositorios | Pruebas de repositorios en verde |
 | 6 | Estructura de navegación: pestañas + botón "+" elevado según Stitch | Coincide con Stitch en el emulador |
 | 7 | Pantallas: Categorías → Billeteras + transferencias → Registrar movimiento → Historial (editar/eliminar) → Dashboard de Inicio | Cada pantalla coincide con Stitch; flujos probados |
