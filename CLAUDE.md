@@ -39,6 +39,9 @@ Expo SDK 58 (React Native 0.88) · TypeScript strict · Expo Router · PowerSync
 - Usar un **development build**, no Expo Go (el SQLite nativo de PowerSync lo requiere).
 - No agregar `expo-sqlite` junto con PowerSync.
 - Verificar APIs y versiones de paquetes con Context7 (o la documentación oficial) antes de agregar dependencias.
+- Instalar paquetes siempre con `npx expo install <paquete>` (elige versiones compatibles con el SDK). Para dependencias de desarrollo en Git Bash: `npx expo install <paquete>` y luego moverlas con `npm install --save-dev <paquete>@<versión>`.
+- Antes de dar por terminada una tarea: `npm test`, `npm run typecheck` y `npx expo lint`.
+- TypeScript 6 no carga tipos globales automáticamente: los tipos de entorno se declaran en `tsconfig.json` → `types` (hoy `["jest"]`).
 
 ## Reglas financieras innegociables (detalle completo en docs/FINANCIAL_RULES.md)
 - El dinero se guarda en **unidades mínimas enteras** + código de moneda ISO. Nunca en punto flotante.
