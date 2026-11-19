@@ -1,12 +1,12 @@
 # FinKash — Estado actual
 
-Última actualización: 2026-11-19 (cierre de la Fase 6 en código)
+Última actualización: 2026-11-19 (cierre de la Fase 7A en código)
 
 ## 1. Fase de desarrollo actual
-Fases 3 a 6 completas en código. La Fase 6 (navegación y tokens) espera tu **verificación visual** en el emulador (§7). Siguiente: plan de la **Fase 7** (pantallas).
+Fases 3 a 7A completas en código. Esperan tu **verificación visual** las Fases 5, 6 y 7A (lista en `PENDING_TASKS.md`). Siguiente: plan **7B** (Registrar movimiento + Historial).
 
 ## 2. Tarea actual
-Ninguna en curso. Cerrada la Fase 6 (plan `2026-11-19-fase6-navegacion-y-tokens.md`, un commit local por tarea). Falta que verifiques la interfaz y se redacte el plan de la Fase 7.
+Ninguna en curso. Cerrada la Fase 7A (plan `2026-11-19-fase7a-categorias-y-billeteras.md`, un commit local por tarea). Falta tu verificación visual y redactar el plan 7B.
 
 ## 3. Trabajo completado
 - Dominio (Fase 4): dinero, fechas, validación de movimientos, saldos, deudas, validación en el tiempo (`checkChange`), apertura y arreglo, reportes de Inicio, periodos, categorías.
@@ -14,7 +14,8 @@ Ninguna en curso. Cerrada la Fase 6 (plan `2026-11-19-fase6-navegacion-y-tokens.
 - `RepositoriesProvider` abre la base real (op-sqlite) y siembra al arrancar (la pantalla provisional con conteos se retiró en la Fase 6).
 - Development build recompilado con `@op-engineering/op-sqlite` (BUILD SUCCESSFUL).
 - Fase 6: tokens de Stitch, fuente Inter con respaldo, íconos Material Symbols (`expo-symbols`), componentes base de vidrio, barra flotante solo con íconos con "+" elevado (`expo-router/ui`) y 5 esqueletos de pantalla.
-- Decisiones D32–D42 registradas (D36 y D38–D42 pendientes de confirmación).
+- Fase 7A: notificador de cambios y `useQuery`, repositorio `ledger`, componentes de lista/formulario/hojas, pantallas de Categorías y Billeteras (grilla con saldo por moneda, ocultas, deudas y bancos en lectura), detalle de billetera (movimientos, arreglo de saldo, ocultar, transferir) y `parseBalanceInput` en el dominio.
+- Decisiones D32–D44 registradas (D36 y D38–D44 pendientes de confirmación).
 
 ## 4. Archivos creados o modificados
 - `src/data/{local,repositories}/*`, `src/data/{index,RepositoriesProvider}`, `src/validation/inputs.ts`, `src/lib/id.ts`, `jest.setup.ts`.
@@ -23,10 +24,10 @@ Ninguna en curso. Cerrada la Fase 6 (plan `2026-11-19-fase6-navegacion-y-tokens.
 - Documentos de progreso y `DEVELOPMENT_ROADMAP.md`.
 
 ## 5. Pruebas ejecutadas y resultados
-- `npm test` → **365/365 pruebas** (29 suites); `npm run typecheck` y `npx expo lint` limpios; Metro empaqueta el bundle de Android (HTTP 200).
+- `npm test` → **472/472 pruebas** (39 suites); `npm run typecheck` y `npx expo lint` limpios; Metro empaqueta el bundle de Android (HTTP 200).
 - Pureza: `src/domain/` sin imports de `@/data`, React Native, Expo, PowerSync ni Supabase.
 - Las pruebas de datos usan SQLite real (`node:sqlite`), no las vistas de PowerSync (D38).
-- La base real y la interfaz de las Fases 5–6 **no se verificaron visualmente**: el emulador se colgó dos veces el 2026-11-19 y el usuario pidió suspender la verificación del agente; `logcat` no mostró un fallo fatal.
+- La base real y la interfaz de las Fases 5–7A **no se verificaron visualmente**: el emulador se colgó dos veces el 2026-11-19 y el usuario pidió suspender la verificación del agente; `logcat` no mostró un fallo fatal.
 
 ## 6. Errores conocidos
 - Un proceso `expo start` antiguo en el puerto 8081 dejó de responder al empaquetar (ya detenido). Usar un solo Metro. Hay cambios nativos sin compilar (`app.json`: `userInterfaceStyle` y plugin `expo-font`); recompilar con `npx expo run:android --no-bundler` cuando quieras.
@@ -36,11 +37,11 @@ Ninguna en curso. Cerrada la Fase 6 (plan `2026-11-19-fase6-navegacion-y-tokens.
 
 ## 7. Trabajo pendiente
 - **Verificación visual (usuario):** lista de comprobación de la Fase 6 en `PENDING_TASKS.md`; además, la base real de la Fase 5 (el contador provisional se quitó de Inicio: la base se abre en el arranque; si falla se mostrará "No se pudo abrir la base de datos").
-- Redactar el plan de la Fase 7 y decidir lo pendiente de diseño (diseño previo en Stitch de "Registrar", gráficos).
-- Confirmar D36 y D38–D42; config plugin para `cmake.dir`.
+- Plan 7B (Registrar movimiento + Historial) y 7C (Inicio con gráficos); decidir el diseño previo de "Registrar" en Stitch.
+- Confirmar D36 y D38–D44; config plugin para `cmake.dir`.
 
 ## 8. Siguiente acción recomendada
-Verificar la interfaz en el emulador (lista en `PENDING_TASKS.md`) y luego pedir el plan de la Fase 7.
+Verificar las pantallas en el emulador (lista en `PENDING_TASKS.md`) y pedir el plan 7B.
 
 ## 9. Configuración o preparación externa pendiente
 - Más adelante: cuenta de Expo + EAS CLI (Fase 11); proyecto de desarrollo en Supabase y cuenta de PowerSync (Fase 9).

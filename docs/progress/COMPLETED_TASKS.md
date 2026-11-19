@@ -36,3 +36,7 @@
   - T1 tokens de Stitch y fuente Inter con respaldo (`b920edc`), T2 íconos y componentes base de vidrio (`f858406`), T3 barra flotante con "+" elevado y 5 esqueletos de pantalla (`c013568`).
   - 365 pruebas en verde (29 suites), typecheck y lint limpios; Metro empaqueta sin errores.
   - **No verificado visualmente** (queda a cargo del usuario, ver `PENDING_TASKS.md`).
+- **Fase 7A — Datos en vivo, Categorías y Billeteras** (plan `2026-11-19-fase7a-categorias-y-billeteras.md`, tareas 1–5 con commit local; la 6 es este cierre):
+  - T1 notificador de cambios, repositorio `ledger` y `useQuery` (`4c0505f`), T2 componentes de lista, formulario y hojas (`d7eeb19`), T3 pantalla de Categorías (`8f9e960`), T4 pantalla de Billeteras con deudas y tarjetas (`6d61762`), T5 detalle de billetera y arreglo de saldo (`ba7ec71`).
+  - 472 pruebas en verde (39 suites), typecheck y lint limpios; Metro empaqueta sin errores.
+  - **No verificado visualmente** (a cargo del usuario, ver `PENDING_TASKS.md`).

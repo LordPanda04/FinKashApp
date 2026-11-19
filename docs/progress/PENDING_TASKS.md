@@ -32,10 +32,20 @@
 - [ ] Anotar aquí las diferencias con Stitch que veas (no se corrigen en la Fase 6 salvo errores de funcionamiento).
 - [ ] Confirmar D41–D42.
 
+## Fase 7A (en código; pendiente de tu verificación visual)
+- [x] Plan `2026-11-19-fase7a-categorias-y-billeteras.md` ejecutado (tareas 1–5).
+- [ ] **Verificación visual (usuario)** — con `npx expo start` (un solo Metro en 8081) y la app abierta:
+  - Categorías: se ven las 6 sembradas; "+" abre "Nueva categoría" (tipo, nombre, color, ícono); al guardar aparece en la lista sin recargar; editar cambia nombre/color; eliminar pide confirmación con el conteo "pasarán a «Otros»"; "Otros" y "Préstamo" no tienen botón de eliminar.
+  - Billeteras: "+ Agregar billetera" crea "Yape" con PEN y USD y saldos iniciales, y se ve en la grilla con un saldo por moneda; un monto como "24,50" muestra error; tocar la tarjeta abre el detalle.
+  - Detalle: saldos, movimientos de esa billetera, "Arreglo de billetera" (probar con saldo real 0 y con un valor distinto), "Ocultar billetera" (con confirmación) y que aparezca en "Billeteras ocultas" al volver; "Transferir" abre Registrar (aún esqueleto).
+  - Cerrar y reabrir la app: los datos siguen ahí (base real de PowerSync).
+- [ ] Anotar aquí las diferencias con Stitch que veas.
+- [ ] Confirmar D43–D44.
+
 ## Siguiente
 - [ ] Config plugin de Expo para fijar `cmake.dir` (hoy en `android/local.properties`, local).
 - [ ] Aprobar o corregir D36 (detalles de implementación del dominio).
-- [ ] Escribir el plan de la Fase 6 (navegación y pantallas de Stitch).
+- [ ] Plan 7B (Registrar movimiento + Historial) y luego 7C (Inicio con gráficos).
 
 ## Pendientes de diseño
 - [ ] Decidir si el nuevo Registrar (3 opciones) y las pantallas faltantes (`DESIGN_SYSTEM.md` §8) se diseñan antes en Stitch o se construyen con los componentes existentes. Debe estar resuelto antes del plan de interfaz (Fases 6–7).

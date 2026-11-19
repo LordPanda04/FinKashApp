@@ -12,7 +12,7 @@ Cada fase termina con las pruebas en verde, la documentación actualizada y (sol
 | 4 | Núcleo de dominio con TDD: dinero, reglas de movimientos, saldos, reportes | ✅ Tareas 3–11 del plan: 168 pruebas en verde, typecheck y lint limpios, `src/domain/` sin imports de React Native/Expo/PowerSync/Supabase (2026-11-17) |
 | 5 | Base local de PowerSync (sin servidor) + repositorios | ✅ Repositorios probados con SQLite real (320 pruebas). Pendiente: confirmación visual en el emulador de la base real de PowerSync (2026-11-19) |
 | 6 | Estructura de navegación: pestañas + botón "+" elevado según Stitch | ✅ en código (365 pruebas, bundle OK). Pendiente: coincidencia visual con Stitch en el emulador, verificada por el usuario (2026-11-19) |
-| 7 | Pantallas: Categorías → Billeteras + transferencias → Registrar movimiento → Historial (editar/eliminar) → Dashboard de Inicio | Cada pantalla coincide con Stitch; flujos probados |
+| 7 | Pantallas: Categorías → Billeteras + transferencias → Registrar movimiento → Historial (editar/eliminar) → Dashboard de Inicio | Dividida en 7A (✅ en código: datos en vivo, Categorías, Billeteras con detalle y arreglo; falta verificación visual), 7B (Registrar + Historial) y 7C (Inicio con gráficos). Cada pantalla debe coincidir con Stitch; flujos probados |
 | 8 | Periodos financieros mensuales | Flujos de sugerencia, confirmación y descarte probados |
 | 9 | Proyecto de desarrollo en Supabase, migraciones, RLS, Auth, sincronización con PowerSync | Sincronización entre dos dispositivos verificada; RLS verificado |
 | 10 | Deudas y tarjetas de crédito | Reglas contables probadas de punta a punta |
