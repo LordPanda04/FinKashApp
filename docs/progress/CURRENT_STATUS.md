@@ -11,14 +11,14 @@ Ninguna en curso. Cerrada la Fase 6 (plan `2026-11-19-fase6-navegacion-y-tokens.
 ## 3. Trabajo completado
 - Dominio (Fase 4): dinero, fechas, validación de movimientos, saldos, deudas, validación en el tiempo (`checkChange`), apertura y arreglo, reportes de Inicio, periodos, categorías.
 - Fase 5: `src/data/` con interfaz `LocalDb`, esquema cliente declarativo (`schema.ts`) y su traducción a PowerSync (`powersyncSchema.ts`), semilla idempotente, lectura validada del libro, validación Zod y seis repositorios (categorías, billeteras/tarjetas, deudas, movimientos, periodos, ajustes/umbrales). Cada escritura es una transacción que valida con `checkChange`.
-- `RepositoriesProvider` abre la base real (op-sqlite), siembra y muestra una pantalla provisional con los conteos.
+- `RepositoriesProvider` abre la base real (op-sqlite) y siembra al arrancar (la pantalla provisional con conteos se retiró en la Fase 6).
 - Development build recompilado con `@op-engineering/op-sqlite` (BUILD SUCCESSFUL).
 - Fase 6: tokens de Stitch, fuente Inter con respaldo, íconos Material Symbols (`expo-symbols`), componentes base de vidrio, barra flotante solo con íconos con "+" elevado (`expo-router/ui`) y 5 esqueletos de pantalla.
 - Decisiones D32–D42 registradas (D36 y D38–D42 pendientes de confirmación).
 
 ## 4. Archivos creados o modificados
 - `src/data/{local,repositories}/*`, `src/data/{index,RepositoriesProvider}`, `src/validation/inputs.ts`, `src/lib/id.ts`, `jest.setup.ts`.
-- `src/app/_layout.tsx` (provider) y `src/app/index.tsx` (pantalla provisional).
+- `src/app/_layout.tsx` (fuentes, tema claro, provider) y `src/app/(tabs)/*` (5 esqueletos); `src/ui/*` (tokens, componentes, barra de pestañas); `app.json` (`userInterfaceStyle`, plugin `expo-font`).
 - `package.json`/`package-lock.json` (`@powersync/react-native`, `@op-engineering/op-sqlite`, `zod`, `expo-crypto`, `@types/node`), `tsconfig.json` (`types` incluye `node`).
 - Documentos de progreso y `DEVELOPMENT_ROADMAP.md`.
 
@@ -26,7 +26,7 @@ Ninguna en curso. Cerrada la Fase 6 (plan `2026-11-19-fase6-navegacion-y-tokens.
 - `npm test` → **365/365 pruebas** (29 suites); `npm run typecheck` y `npx expo lint` limpios; Metro empaqueta el bundle de Android (HTTP 200).
 - Pureza: `src/domain/` sin imports de `@/data`, React Native, Expo, PowerSync ni Supabase.
 - Las pruebas de datos usan SQLite real (`node:sqlite`), no las vistas de PowerSync (D38).
-- Metro empaqueta el proyecto sin errores (1434 módulos). **La pantalla con la base real no se verificó visualmente**: el emulador se colgó dos veces durante la verificación y el usuario pidió suspenderla; `logcat` no mostró un fallo fatal.
+- La base real y la interfaz de las Fases 5–6 **no se verificaron visualmente**: el emulador se colgó dos veces el 2026-11-19 y el usuario pidió suspender la verificación del agente; `logcat` no mostró un fallo fatal.
 
 ## 6. Errores conocidos
 - Un proceso `expo start` antiguo en el puerto 8081 dejó de responder al empaquetar (ya detenido). Usar un solo Metro. Hay cambios nativos sin compilar (`app.json`: `userInterfaceStyle` y plugin `expo-font`); recompilar con `npx expo run:android --no-bundler` cuando quieras.
