@@ -19,6 +19,9 @@ export function createFakeRepositories(
     accounts?: Account[];
     cards?: CardRecord[];
     debts?: FakeDebt[];
+    device?: { hideAmounts: boolean; showProjection: boolean; homeScope: string };
+    thresholds?: { id: string; currency: Currency; amountMinor: number; walletId: string | null }[];
+    period?: { start: string; end: string };
   } = {},
 ) {
   const changes = createChangeNotifier();
@@ -30,8 +33,10 @@ export function createFakeRepositories(
   const accounts: Account[] = seed.accounts ?? [];
   const cards: CardRecord[] = seed.cards ?? [];
   const debts: FakeDebt[] = seed.debts ?? [];
+  let device = seed.device ?? { hideAmounts: false, showProjection: false, homeScope: 'general' };
+  let thresholds = seed.thresholds ?? [];
 
-  const calls = { updateMovement: jest.fn(), removeMovement: jest.fn(), createMovement: jest.fn(), createWithNewDebt: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn() };
+  const calls = { setDevice: jest.fn(), setThreshold: jest.fn(), clearThreshold: jest.fn(), setIncludeInGeneral: jest.fn(), updateMovement: jest.fn(), removeMovement: jest.fn(), createMovement: jest.fn(), createWithNewDebt: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn() };
 
   const repos = {
     changes,
@@ -130,6 +135,29 @@ export function createFakeRepositories(
       },
     },
     debts: { list: async () => debts },
+    periods: { activeRange: async () => seed.period ?? { start: '2026-11-01', end: '2026-11-20' } },
+    settings: {
+      getDevice: async () => device,
+      setDevice: async (patch: Partial<typeof device>) => {
+        calls.setDevice(patch);
+        device = { ...device, ...patch };
+        changes.notify();
+      },
+      listThresholds: async () => thresholds,
+      setThreshold: async (input: { currency: Currency; amountMinor: number; walletId?: string }) => {
+        calls.setThreshold(input);
+        if (!Number.isSafeInteger(input.amountMinor) || input.amountMinor <= 0) return err('INPUT_INVALID', 'El umbral debe ser mayor a 0.');
+        const walletId = input.walletId ?? null;
+        thresholds = [...thresholds.filter((t) => !(t.currency === input.currency && t.walletId === walletId)), { id: `t${nextId++}`, currency: input.currency, amountMinor: input.amountMinor, walletId }];
+        changes.notify();
+        return ok({ id: 't' });
+      },
+      clearThreshold: async (currency: Currency, walletId: string | null) => {
+        calls.clearThreshold(currency, walletId);
+        thresholds = thresholds.filter((t) => !(t.currency === currency && t.walletId === walletId));
+        changes.notify();
+      },
+    },
     ledger: {
       state: async (): Promise<LedgerState> => ({ accounts: [...accounts], movements: [...movements], categories: [], debts: [] }),
     },
@@ -150,6 +178,15 @@ export function createFakeRepositories(
         }
         changes.notify();
         return ok({ wallet, accounts: created });
+      },
+      setIncludeInGeneral: async (id: string, include: boolean) => {
+        calls.setIncludeInGeneral(id, include);
+        const current = wallets.find((w) => w.id === id);
+        if (!current) return err('WALLET_NOT_FOUND', 'La billetera no existe.');
+        const next = { ...current, includeInGeneral: include };
+        wallets = wallets.map((w) => (w.id === id ? next : w));
+        changes.notify();
+        return ok(next);
       },
       setHidden: async (id: string, hidden: boolean) => {
         calls.setHidden(id, hidden);

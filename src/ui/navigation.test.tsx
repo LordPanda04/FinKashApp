@@ -18,7 +18,13 @@ jest.mock('react-native-safe-area-context', () => ({
 
 const routes = {
   '(tabs)/_layout': TabsLayout,
-  '(tabs)/index': Inicio,
+  '(tabs)/index': function InicioConDatos() {
+    return (
+      <RepositoriesContext.Provider value={createFakeRepositories().repos}>
+        <Inicio />
+      </RepositoriesContext.Provider>
+    );
+  },
   '(tabs)/historial': function HistorialConDatos() {
     return (
       <RepositoriesContext.Provider value={createFakeRepositories().repos}>
