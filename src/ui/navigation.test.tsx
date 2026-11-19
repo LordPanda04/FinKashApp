@@ -7,6 +7,7 @@ import Historial from '@/app/(tabs)/historial';
 import Inicio from '@/app/(tabs)/index';
 import TabsLayout from '@/app/(tabs)/_layout';
 import Registrar from '@/app/(tabs)/registrar';
+import Periodo from '@/app/periodo';
 import { RepositoriesContext } from '@/data/RepositoriesContext';
 import { createFakeRepositories } from '@/test-utils/fakeRepositories';
 
@@ -43,6 +44,13 @@ const routes = {
     return (
       <RepositoriesContext.Provider value={createFakeRepositories().repos}>
         <Billeteras />
+      </RepositoriesContext.Provider>
+    );
+  },
+  periodo: function PeriodoConDatos() {
+    return (
+      <RepositoriesContext.Provider value={createFakeRepositories().repos}>
+        <Periodo />
       </RepositoriesContext.Provider>
     );
   },
@@ -168,6 +176,13 @@ describe('pantallas', () => {
     await renderRouter(routes, { initialUrl: '/historial' });
     expect(screen.getByRole('header', { name: 'Historial' })).toBeOnTheScreen();
     expect(await screen.findByText('No hay movimientos con estos filtros.')).toBeOnTheScreen();
+  });
+
+  it('la ruta /periodo existe y muestra la confirmación del periodo sin la barra de pestañas', async () => {
+    await renderRouter(routes, { initialUrl: '/periodo' });
+    expect(screen).toHavePathname('/periodo');
+    expect(await screen.findByRole('header', { name: /^Iniciar periodo de / })).toBeOnTheScreen();
+    expect(screen.queryByTestId('tab-bar')).toBeNull();
   });
 
   it('Registrar movimiento muestra su título y el control de tres opciones', async () => {

@@ -3,6 +3,7 @@ import type { Repositories } from '@/data/index';
 import type { CardRecord, CategoryRecord, DebtRecord, WalletRecord } from '@/data/types';
 import type { Account, LedgerState, Movement } from '@/domain/ledger/types';
 import type { Currency } from '@/domain/money/money';
+import { accountBalance } from '@/domain/ledger/balances';
 import { err, ok } from '@/lib/result';
 
 /**
@@ -22,11 +23,13 @@ export function createFakeRepositories(
     device?: { hideAmounts: boolean; showProjection: boolean; homeScope: string; displayName?: string | null };
     thresholds?: { id: string; currency: Currency; amountMinor: number; walletId: string | null }[];
     period?: { start: string; end: string };
+    /** Resultado de `periods.shouldSuggest()` (por defecto, `false`). */
+    suggestPeriod?: boolean;
   } = {},
 ) {
   const changes = createChangeNotifier();
   let categories: CategoryRecord[] = seed.categories ?? seededCategories();
-  const movements: Movement[] = seed.movements ?? [];
+  const movements: Movement[] = [...(seed.movements ?? [])]; // copia: el falso agrega arreglos y no debe contaminar el arreglo de la prueba
   let nextId = 100;
 
   let wallets: WalletRecord[] = seed.wallets ?? [];
@@ -38,8 +41,9 @@ export function createFakeRepositories(
     hideAmounts: false, showProjection: false, homeScope: 'general', displayName: '', ...seed.device,
   };
   let thresholds = seed.thresholds ?? [];
+  let suggestPeriod = seed.suggestPeriod ?? false;
 
-  const calls = { setDevice: jest.fn(), setThreshold: jest.fn(), clearThreshold: jest.fn(), setIncludeInGeneral: jest.fn(), updateMovement: jest.fn(), removeMovement: jest.fn(), createMovement: jest.fn(), createWithNewDebt: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn() };
+  const calls = { setDevice: jest.fn(), setThreshold: jest.fn(), clearThreshold: jest.fn(), setIncludeInGeneral: jest.fn(), updateMovement: jest.fn(), removeMovement: jest.fn(), createMovement: jest.fn(), createWithNewDebt: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn(), confirmPeriod: jest.fn(), dismissPeriod: jest.fn() };
 
   const repos = {
     changes,
@@ -134,11 +138,42 @@ export function createFakeRepositories(
       },
       adjustWallet: async (input: { accountId: string; declaredMinor: number; occurredOn?: string }) => {
         calls.adjustWallet(input);
-        return fakeAdjust(input);
+        const result = fakeAdjust(input) as { ok: boolean };
+        if (result.ok) {
+          // Como el repositorio real: registra un arreglo por la diferencia, para que los saldos cambien.
+          const account = accounts.find((a) => a.id === input.accountId);
+          const diff = input.declaredMinor - accountBalance(input.accountId, movements);
+          if (account && diff !== 0) {
+            movements.push(movementOf({
+              id: `adj${nextId++}`, type: 'adjustment', occurredOn: input.occurredOn ?? '2026-11-20', currency: account.currency,
+              sourceAccountId: diff < 0 ? input.accountId : null, destAccountId: diff > 0 ? input.accountId : null,
+              amountMinor: Math.abs(diff), declaredBalanceMinor: input.declaredMinor,
+            }));
+          }
+          changes.notify();
+        }
+        return result;
       },
     },
     debts: { list: async () => debts },
-    periods: { activeRange: async () => seed.period ?? { start: '2026-11-01', end: '2026-11-20' } },
+    periods: {
+      activeRange: async () => seed.period ?? { start: '2026-11-01', end: '2026-11-20' },
+      shouldSuggest: async () => suggestPeriod,
+      confirm: async (input: { month: string; startedOn?: string }) => {
+        calls.confirmPeriod(input);
+        const result = (fake.confirmResult ? fake.confirmResult(input) : ok({ id: 'p', month: input.month, startedOn: input.startedOn ?? `${input.month}-01`, confirmedAt: 'x', dismissedAt: null })) as { ok: boolean };
+        if (result.ok) {
+          suggestPeriod = false;
+          changes.notify();
+        }
+        return result;
+      },
+      dismiss: async (month: string) => {
+        calls.dismissPeriod(month);
+        suggestPeriod = false;
+        changes.notify();
+      },
+    },
     settings: {
       getDevice: async () => device,
       setDevice: async (patch: Partial<typeof device>) => {
@@ -215,6 +250,7 @@ export function createFakeRepositories(
     repos: repos as unknown as Repositories,
     calls,
     changes,
+    confirmResult: undefined as undefined | ((input: { month: string; startedOn?: string }) => unknown),
     adjustResult: undefined as undefined | ((input: { accountId: string; declaredMinor: number }) => unknown),
     createResult: undefined as undefined | ((draft: Omit<Movement, 'id'>) => unknown),
     updateResult: undefined as undefined | ((id: string, draft: Omit<Movement, 'id'>) => unknown),
