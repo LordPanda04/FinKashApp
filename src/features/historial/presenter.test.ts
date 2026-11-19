@@ -1,6 +1,6 @@
 import type { CardRecord, CategoryRecord, WalletRecord } from '@/data/types';
 import type { Account, Movement } from '@/domain/ledger/types';
-import { describeMovement, filterMovements, groupByDay } from './presenter';
+import { describeMovement, filterMovements, groupByDay, monthLabel, monthsWithMovements } from './presenter';
 
 const TODAY = '2026-11-20';
 const wallets: WalletRecord[] = [
@@ -97,7 +97,7 @@ describe('filterMovements', () => {
     mv({ id: 'tr', occurredOn: '2026-11-18', type: 'transfer', sourceAccountId: 'yapePen', destAccountId: 'plinPen' }),
     mv({ id: 'card', occurredOn: '2026-11-19', categoryId: 'food', sourceAccountId: 'bcp' }),
   ];
-  const none = { categoryIds: [], walletIds: [] };
+  const none = { categoryIds: [], walletIds: [], pickedMonth: null };
   const ids = (f: Parameters<typeof filterMovements>[2]) => filterMovements(ms, accounts, f, TODAY).map((m) => m.id);
 
   it('"Este mes" excluye octubre', () => {
@@ -117,20 +117,76 @@ describe('filterMovements', () => {
     expect(ids({ date: 'all', ...none })).toHaveLength(ms.length);
   });
   it('categoría: solo esa categoría', () => {
-    expect(ids({ date: 'all', categoryIds: ['salary'], walletIds: [] })).toEqual(['nov20']);
+    expect(ids({ date: 'all', categoryIds: ['salary'], walletIds: [], pickedMonth: null })).toEqual(['nov20']);
   });
   it('billetera: incluye transferencias que la tocan por origen o destino', () => {
-    const r = ids({ date: 'all', categoryIds: [], walletIds: ['w2'] });
+    const r = ids({ date: 'all', categoryIds: [], walletIds: ['w2'], pickedMonth: null });
     expect(r).toEqual(expect.arrayContaining(['nov20', 'tr']));
     expect(r).not.toContain('nov14');
   });
   it('una tarjeta se filtra por el id de su cuenta', () => {
-    expect(ids({ date: 'all', categoryIds: [], walletIds: ['bcp'] })).toEqual(['card']);
+    expect(ids({ date: 'all', categoryIds: [], walletIds: ['bcp'], pickedMonth: null })).toEqual(['card']);
   });
   it('combina fecha, categoría y billetera', () => {
-    expect(ids({ date: 'month', categoryIds: ['food'], walletIds: ['w1'] }).sort()).toEqual(['nov13', 'nov14']);
+    expect(ids({ date: 'month', categoryIds: ['food'], walletIds: ['w1'], pickedMonth: null }).sort()).toEqual(['nov13', 'nov14']);
   });
   it('filtros vacíos y fecha "all" devuelven todo', () => {
     expect(ids({ date: 'all', ...none })).toHaveLength(7);
+  });
+});
+
+describe('filterMovements — elegir un mes', () => {
+  const ms = [
+    mv({ id: 'sep30', occurredOn: '2026-09-30', categoryId: 'food', sourceAccountId: 'yapePen' }),
+    mv({ id: 'oct01', occurredOn: '2026-10-01', categoryId: 'food', sourceAccountId: 'yapePen' }),
+    mv({ id: 'oct31', occurredOn: '2026-10-31', categoryId: 'food', sourceAccountId: 'plinPen' }),
+    mv({ id: 'oct15', occurredOn: '2026-10-15', type: 'income', categoryId: 'salary', sourceAccountId: null, destAccountId: 'plinPen' }),
+    mv({ id: 'nov01', occurredOn: '2026-11-01', categoryId: 'food', sourceAccountId: 'yapePen' }),
+  ];
+  const ids = (f: Parameters<typeof filterMovements>[2]) => filterMovements(ms, accounts, f, TODAY).map((m) => m.id).sort();
+
+  it('deja solo los movimientos de ese mes, incluidos el primer y el último día', () => {
+    expect(ids({ date: 'pick', pickedMonth: '2026-10', categoryIds: [], walletIds: [] })).toEqual(['oct01', 'oct15', 'oct31']);
+  });
+
+  it('sigue combinándose con los filtros de categoría y de billetera', () => {
+    expect(ids({ date: 'pick', pickedMonth: '2026-10', categoryIds: ['food'], walletIds: ['w2'] })).toEqual(['oct31']);
+    expect(ids({ date: 'pick', pickedMonth: '2026-10', categoryIds: ['salary'], walletIds: ['w1'] })).toEqual([]);
+  });
+
+  it('un mes sin movimientos da lista vacía', () => {
+    expect(ids({ date: 'pick', pickedMonth: '2026-08', categoryIds: [], walletIds: [] })).toEqual([]);
+  });
+
+  it('"pick" sin mes elegido se comporta como "Este mes"', () => {
+    expect(ids({ date: 'pick', pickedMonth: null, categoryIds: [], walletIds: [] })).toEqual(['nov01']);
+  });
+});
+
+describe('monthsWithMovements', () => {
+  const at = (id: string, occurredOn: string) => mv({ id, occurredOn });
+
+  it('lista los meses con movimientos y el mes actual, del más reciente al más antiguo y sin repetir', () => {
+    const list = [at('a', '2026-09-30'), at('b', '2026-10-01'), at('c', '2026-10-31'), at('d', '2026-09-01')];
+    expect(monthsWithMovements(list, TODAY)).toEqual(['2026-11', '2026-10', '2026-09']);
+  });
+
+  it('sin movimientos ofrece solo el mes actual', () => {
+    expect(monthsWithMovements([], TODAY)).toEqual(['2026-11']);
+  });
+
+  it('no ofrece meses vacíos intermedios', () => {
+    expect(monthsWithMovements([at('a', '2026-07-10')], TODAY)).toEqual(['2026-11', '2026-07']);
+  });
+
+  it('conserva un mes futuro si hay movimientos allí', () => {
+    expect(monthsWithMovements([at('a', '2026-12-05')], TODAY)).toEqual(['2026-12', '2026-11']);
+  });
+});
+
+describe('monthLabel', () => {
+  it('da el mes en español con su año', () => {
+    expect(monthLabel('2026-10')).toBe('Octubre 2026');
+    expect(monthLabel('2027-01')).toBe('Enero 2027');
   });
 });

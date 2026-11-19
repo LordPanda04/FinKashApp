@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useRepositories } from '@/data/RepositoriesContext';
 import { useQuery } from '@/data/useQuery';
-import { todayInLima, type IsoDate } from '@/lib/dates';
+import { monthOf, todayInLima, type IsoDate } from '@/lib/dates';
 import { AppText } from '@/ui/AppText';
 import { ConfirmDialog } from '@/ui/ConfirmDialog';
 import { FilterChip } from '@/ui/FilterChip';
@@ -16,9 +16,9 @@ import { SelectorSheet } from '@/ui/SelectorSheet';
 import { colors } from '@/ui/tokens';
 import { blockedNotice } from '@/features/movimientos/presenter';
 import { MovementRow } from './MovementRow';
-import { DATE_FILTER_LABEL, describeMovement, filterMovements, groupByDay, type DateFilter, type HistoryFilters, type RowView } from './presenter';
+import { DATE_FILTER_LABEL, describeMovement, filterMovements, groupByDay, monthLabel, monthsWithMovements, type DateFilter, type HistoryFilters, type RowView } from './presenter';
 
-type Sheet = 'date' | 'category' | 'wallet' | null;
+type Sheet = 'date' | 'month' | 'category' | 'wallet' | null;
 
 const toggle = (list: string[], id: string) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
 
@@ -26,7 +26,7 @@ export function HistorialScreen({ today: todayProp }: { today?: IsoDate }) {
   const router = useRouter();
   const { movements } = useRepositories();
   const today = todayProp ?? todayInLima(new Date());
-  const [filters, setFilters] = useState<HistoryFilters>({ date: 'month', categoryIds: [], walletIds: [] });
+  const [filters, setFilters] = useState<HistoryFilters>({ date: 'month', pickedMonth: null, categoryIds: [], walletIds: [] });
   const [sheet, setSheet] = useState<Sheet>(null);
   const [editing, setEditing] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<RowView | null>(null);
@@ -70,7 +70,11 @@ export function HistorialScreen({ today: todayProp }: { today?: IsoDate }) {
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} style={{ flexGrow: 0 }}>
-        <FilterChip label="Fecha" active={filters.date !== 'month'} onPress={() => setSheet('date')} />
+        <FilterChip
+          label={filters.date === 'pick' && filters.pickedMonth ? monthLabel(filters.pickedMonth) : 'Fecha'}
+          active={filters.date !== 'month'}
+          onPress={() => setSheet('date')}
+        />
         <FilterChip label="Categoría" active={filters.categoryIds.length > 0} onPress={() => setSheet('category')} />
         <FilterChip label="Billetera" active={filters.walletIds.length > 0} onPress={() => setSheet('wallet')} />
       </ScrollView>
@@ -114,7 +118,24 @@ export function HistorialScreen({ today: todayProp }: { today?: IsoDate }) {
         title="Fecha"
         options={(Object.keys(DATE_FILTER_LABEL) as DateFilter[]).map((v) => ({ value: v, label: DATE_FILTER_LABEL[v] }))}
         value={filters.date}
-        onSelect={(date) => setFilters((f) => ({ ...f, date }))}
+        onSelect={(date) => {
+          if (date === 'pick') {
+            // "Elegir mes…" abre la lista de meses; el cierre automático de esta hoja no debe taparla.
+            setSheet('month');
+            return;
+          }
+          setFilters((f) => ({ ...f, date, pickedMonth: null }));
+        }}
+        onClose={() => setSheet((current) => (current === 'date' ? null : current))}
+      />
+      <SelectorSheet
+        visible={sheet === 'month'}
+        title="Elegir mes"
+        options={(data ? monthsWithMovements(data.movements, today) : [monthOf(today)]).map((m) => ({ value: m, label: monthLabel(m) }))}
+        value={filters.date === 'pick' ? filters.pickedMonth : monthOf(today)}
+        onSelect={(month) =>
+          setFilters((f) => (month === monthOf(today) ? { ...f, date: 'month', pickedMonth: null } : { ...f, date: 'pick', pickedMonth: month }))
+        }
         onClose={() => setSheet(null)}
       />
       <SelectorSheet

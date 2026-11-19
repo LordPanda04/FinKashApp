@@ -107,6 +107,60 @@ describe('HistorialScreen — lista', () => {
   });
 });
 
+describe('HistorialScreen — elegir mes', () => {
+  async function openMonths() {
+    await open();
+    await fireEvent.press(screen.getByRole('button', { name: 'Fecha' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Elegir mes…' }));
+  }
+
+  it('"Elegir mes…" abre la lista de meses con movimientos, el actual primero, sin meses vacíos', async () => {
+    await openMonths();
+    expect(await screen.findByRole('radio', { name: 'Noviembre 2026' })).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'Octubre 2026' })).toBeOnTheScreen();
+    expect(screen.queryByRole('radio', { name: 'Septiembre 2026' })).toBeNull();
+    const labels = screen.getAllByRole('radio').map((r) => r.props.accessibilityLabel);
+    expect(labels).toEqual(['Noviembre 2026', 'Octubre 2026']);
+  });
+
+  it('elegir octubre muestra solo sus movimientos y el chip pasa a decir "Octubre 2026"', async () => {
+    await openMonths();
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Octubre 2026' }));
+    expect(await screen.findByText('Café viejo')).toBeOnTheScreen();
+    expect(screen.queryByText('Menú')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Octubre 2026' })).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Fecha' })).toBeNull();
+  });
+
+  it('volver a elegir "Este mes" restablece el chip y la lista', async () => {
+    await openMonths();
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Octubre 2026' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Octubre 2026' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Este mes' }));
+    expect(await screen.findByText('Menú')).toBeOnTheScreen();
+    expect(screen.queryByText('Café viejo')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Fecha' })).toBeOnTheScreen();
+  });
+
+  it('elegir el mes actual en la lista equivale a "Este mes"', async () => {
+    await openMonths();
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Noviembre 2026' }));
+    expect(await screen.findByText('Menú')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Fecha' })).toBeOnTheScreen();
+  });
+
+  it('un mes con movimientos pero sin coincidencias para los demás filtros muestra la lista vacía', async () => {
+    await open();
+    await fireEvent.press(screen.getByRole('button', { name: 'Categoría' }));
+    await fireEvent.press(await screen.findByRole('checkbox', { name: 'Sueldo' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Listo' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Fecha' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Elegir mes…' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Octubre 2026' }));
+    expect(await screen.findByText('No hay movimientos con estos filtros.')).toBeOnTheScreen();
+  });
+});
+
 describe('HistorialScreen — modo edición', () => {
   it('el lápiz muestra "Editar" y "Eliminar" en cada fila y se oculta al terminar', async () => {
     await open();

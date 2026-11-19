@@ -1,15 +1,18 @@
 import type { CardRecord, CategoryRecord, WalletRecord } from '@/data/types';
 import type { Account, Movement } from '@/domain/ledger/types';
 import type { Currency } from '@/domain/money/money';
-import { addDays, addMonths, formatDayLabel, monthRange, type IsoDate } from '@/lib/dates';
+import { addDays, addMonths, formatDayLabel, monthOf, monthRange, MONTH_NAMES_ES, type IsoDate } from '@/lib/dates';
 import type { IconName } from '@/ui/Icon';
 import { colors } from '@/ui/tokens';
 
-export type DateFilter = 'month' | 'lastMonth' | 'last7' | 'all';
+/** `'pick'` = un mes elegido de la lista (`HistoryFilters.pickedMonth`). */
+export type DateFilter = 'month' | 'lastMonth' | 'last7' | 'all' | 'pick';
 
 /** Filtros del Historial; una lista vacía significa "sin filtrar". `walletIds` acepta billeteras y cuentas de tarjeta. */
 export interface HistoryFilters {
   date: DateFilter;
+  /** Mes `YYYY-MM` elegido; solo se usa con `date: 'pick'`. */
+  pickedMonth: string | null;
   categoryIds: string[];
   walletIds: string[];
 }
@@ -33,10 +36,11 @@ export const DATE_FILTER_LABEL: Record<DateFilter, string> = {
   lastMonth: 'Mes pasado',
   last7: 'Últimos 7 días',
   all: 'Todo',
+  pick: 'Elegir mes…',
 };
 
-function dateRange(filter: DateFilter, today: IsoDate): { start: IsoDate; end: IsoDate } | null {
-  switch (filter) {
+function dateRange(filters: HistoryFilters, today: IsoDate): { start: IsoDate; end: IsoDate } | null {
+  switch (filters.date) {
     case 'month':
       return monthRange(today);
     case 'lastMonth':
@@ -45,11 +49,24 @@ function dateRange(filter: DateFilter, today: IsoDate): { start: IsoDate; end: I
       return { start: addDays(today, -6), end: today };
     case 'all':
       return null;
+    case 'pick':
+      return monthRange(filters.pickedMonth ? `${filters.pickedMonth}-01` : today);
   }
 }
 
+/** "Octubre 2026" a partir de `YYYY-MM`. */
+export function monthLabel(month: string): string {
+  return `${MONTH_NAMES_ES[Number(month.slice(5, 7)) - 1] ?? ''} ${month.slice(0, 4)}`;
+}
+
+/** Meses (`YYYY-MM`) con movimientos, más el mes de `today`; del más reciente al más antiguo y sin repetir. */
+export function monthsWithMovements(movements: Movement[], today: IsoDate): string[] {
+  const months = new Set<string>([monthOf(today), ...movements.map((m) => monthOf(m.occurredOn))]);
+  return [...months].sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+}
+
 export function filterMovements(movements: Movement[], accounts: Account[], filters: HistoryFilters, today: IsoDate): Movement[] {
-  const range = dateRange(filters.date, today);
+  const range = dateRange(filters, today);
   const walletAccountIds = new Set(
     accounts.filter((a) => (a.walletId !== null && filters.walletIds.includes(a.walletId)) || filters.walletIds.includes(a.id)).map((a) => a.id),
   );
