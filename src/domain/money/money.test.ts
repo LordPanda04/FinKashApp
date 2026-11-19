@@ -24,6 +24,20 @@ describe('parseAmountInput', () => {
     if (!r.ok) expect(r.error.code).toBe('AMOUNT_INVALID');
   });
 
+  it.each(['24,50', '1,84', ',5', '1,8,4,0', '1,23,456', '12,34.50'])(
+    'rechaza %j: la coma solo agrupa miles (no es separador decimal)',
+    (bad) => {
+      const r = parseAmountInput(bad);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.code).toBe('AMOUNT_INVALID');
+    },
+  );
+
+  it('acepta comas bien colocadas como separador de miles', () => {
+    expect(parseAmountInput('1,234,567.89')).toEqual({ ok: true, value: 123456789 });
+    expect(parseAmountInput(' 840 ')).toEqual({ ok: true, value: 84000 });
+  });
+
   it('rechaza montos que exceden el entero seguro', () => {
     const r = parseAmountInput('99999999999999999999');
     expect(r.ok).toBe(false);

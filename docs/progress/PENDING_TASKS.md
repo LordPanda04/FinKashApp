@@ -12,7 +12,7 @@
 - [x] Tarea 2: development build instalado y abierto en `Medium_Phone_API_37.0` (CMake 3.31.6).
 - [x] `android.package` definitivo: `com.lordpanda.finkash` (D35).
 - [x] Tareas 3–11: núcleo de dominio con TDD (commits `eb376cf` … Tarea 11; ver `COMPLETED_TASKS.md`).
-- [ ] Revisión final del plan (`agent-skills:code-review-and-quality`) y confirmación del usuario de D36.
+- [x] Revisión final del dominio (`agent-skills:code-review-and-quality`, 2026-11-19): corregido `parseAmountInput` (la coma solo agrupa miles; `"24,50"` ahora se rechaza) y añadida prueba de borde de saldo en 0. Falta solo la confirmación del usuario de D36.
 
 ## Siguiente
 - [ ] Config plugin de Expo para fijar `cmake.dir` (hoy en `android/local.properties`, local).

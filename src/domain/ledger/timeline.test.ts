@@ -64,6 +64,11 @@ describe('checkChange — saldo de billeteras', () => {
     if (r.ok) expect(r.value.map((m) => m.id).sort()).toEqual(['e1', 'i1']);
   });
 
+  it('gastar exactamente todo el saldo (queda en 0) es válido', () => {
+    const s = state([income('i1', '2026-11-10', 10000)]);
+    expect(checkChange({ kind: 'create', movement: expense('e1', '2026-11-12', 10000) }, s, TODAY).ok).toBe(true);
+  });
+
   it('un gasto sin fondos se bloquea el día del gasto', () => {
     const r = checkChange({ kind: 'create', movement: expense('e1', '2026-11-10', 8000) }, state(), TODAY);
     expect(violationsOf(r)).toEqual([
