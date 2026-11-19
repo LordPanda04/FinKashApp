@@ -3,7 +3,7 @@
 Última actualización: 2026-11-19 (cierre de la Fase 8 en código)
 
 ## 1. Fase de desarrollo actual
-Fases 3 a 8 completas en código (8 = primer arranque con nombre y "Efectivo", periodos mensuales, cuentas PEN/USD). Esperan tu **verificación visual** las Fases 5, 6, 7A, 7B, 7C y 8 (listas en `PENDING_TASKS.md`; antes, recompilar el development build por `react-native-svg`; la Fase 8 no agrega módulos nativos). Siguiente: **Fase 9** (Supabase, RLS, Auth y sincronización con PowerSync); antes conviene tu verificación visual.
+Fases 3 a 8 completas en código (8 = primer arranque con nombre y "Efectivo", periodos mensuales, cuentas PEN/USD). Esperan tu **verificación visual** las Fases 5, 6, 7A, 7B, 7C y 8 (listas en `PENDING_TASKS.md`; el development build ya incluye `react-native-svg`; la Fase 8 no agrega módulos nativos). Siguiente: **Fase 9** (Supabase, RLS, Auth y sincronización con PowerSync); antes conviene tu verificación visual.
 
 ## 2. Tarea actual
 Ninguna en curso. Cerrada la Fase 8 (plan `2026-11-19-fase8-primer-arranque-y-periodos.md`, 9 tareas: 8 con commit local de código y esta de cierre). Sin revisión de código por un revisor independiente: la revisión final fue una autorrevisión (ver `COMPLETED_TASKS.md`).
@@ -36,7 +36,7 @@ Ninguna en curso. Cerrada la Fase 8 (plan `2026-11-19-fase8-primer-arranque-y-pe
 - La base real y la interfaz de las Fases 5–8 **no se verificaron visualmente**: el emulador se colgó dos veces el 2026-11-19 y el usuario pidió suspender la verificación del agente; `logcat` no mostró un fallo fatal.
 
 ## 6. Errores conocidos
-- Un proceso `expo start` antiguo en el puerto 8081 dejó de responder al empaquetar (ya detenido). Usar un solo Metro. Hay cambios nativos sin compilar (`app.json`: `userInterfaceStyle` y plugin `expo-font`); recompilar con `npx expo run:android --no-bundler` cuando quieras.
+- Un proceso `expo start` antiguo en el puerto 8081 dejó de responder al empaquetar (ya detenido). Usar un solo Metro. El development build se recompiló el 2026-11-19 (BUILD SUCCESSFUL, 1 min 27 s) e incluye `react-native-svg` (corrige `Can't find ViewManager 'RNSVGCircle'`) y los cambios nativos de `app.json`; instalado en `Medium_Phone_API_37.0`. Si se agrega otro módulo nativo, recompilar con `npx expo run:android --no-bundler`.
 - `android/local.properties` (con `cmake.dir`) es local; si se regenera `android/` hay que recrearlo (pendiente: config plugin).
 - `npm` avisa del script de `@parcel/watcher` no aprobado; `npm audit` reporta 22 vulnerabilidades moderadas en herramientas (sin revisar).
 - Pruebas inestables detectadas (no corregidas): `ThresholdSheet › doble toque` (`src/features/inicio/components.test.tsx`) falló una vez bajo carga con la suite completa y pasa sola; sus toques son secuenciales con un temporizador de 30 ms. Lo mismo puede ocurrir con pruebas de doble toque parecidas de las Fases 7A–7C.
@@ -50,7 +50,7 @@ Ninguna en curso. Cerrada la Fase 8 (plan `2026-11-19-fase8-primer-arranque-y-pe
 - Config plugin para `cmake.dir`.
 
 ## 8. Siguiente acción recomendada
-Verificar visualmente las Fases 5–8 en el emulador (recompilar antes el development build por `react-native-svg`: `npx expo run:android --no-bundler`) y anotar las diferencias con Stitch. Después, pedir el plan de la Fase 9.
+Verificar visualmente las Fases 5–8 en el emulador (el development build ya está recompilado con `react-native-svg`; arrancar `npx expo start`) y anotar las diferencias con Stitch. Después, pedir el plan de la Fase 9.
 
 ## 9. Configuración o preparación externa pendiente
 - Más adelante: cuenta de Expo + EAS CLI (Fase 11); proyecto de desarrollo en Supabase y cuenta de PowerSync (Fase 9).

@@ -61,7 +61,7 @@
 
 ## Fase 7C (en código; pendiente de tu verificación visual)
 - [x] Plan `2026-11-19-fase7c-inicio.md` ejecutado (tareas 1–4).
-- [ ] **Recompilar el development build** (hay un módulo nativo nuevo, `react-native-svg`): `npx expo run:android --no-bundler`; después, `npx expo start` y abrir la app.
+- [x] **Recompilar el development build** (módulo nativo `react-native-svg`): hecho el 2026-11-19 con `npx expo run:android --no-bundler` (BUILD SUCCESSFUL, instalado en el emulador). Falta arrancar `npx expo start` y abrir la app.
 - [ ] **Verificación visual (usuario) de Inicio:**
   - empieza con "Hola!" y sin título; resumen con Disponible / Gastado / Restante;
   - chip de alcance: "Saldo general" con casillas por billetera, y "Solo <billetera>"; cambia todo Inicio a la vez;
