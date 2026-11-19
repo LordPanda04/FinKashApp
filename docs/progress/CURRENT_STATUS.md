@@ -1,12 +1,12 @@
 # FinKash — Estado actual
 
-Última actualización: 2026-11-19 (cierre de la Fase 7B en código)
+Última actualización: 2026-11-19 (cierre de la Fase 7C en código; Fase 7 completa)
 
 ## 1. Fase de desarrollo actual
-Fases 3 a 7B completas en código. Esperan tu **verificación visual** las Fases 5, 6, 7A y 7B (listas en `PENDING_TASKS.md`). Siguiente: plan **7C** (Inicio con gráficos).
+Fases 3 a 7 completas en código (7C = Inicio). Esperan tu **verificación visual** las Fases 5, 6, 7A, 7B y 7C (listas en `PENDING_TASKS.md`; antes, recompilar el development build por `react-native-svg`). Siguiente: **Fase 8** (periodos).
 
 ## 2. Tarea actual
-Ninguna en curso. Cerrada la Fase 7B (plan `2026-11-19-fase7b-registrar-e-historial.md`, un commit local por tarea). Falta tu verificación visual y redactar el plan 7C.
+Ninguna en curso. Cerrada la Fase 7C (plan `2026-11-19-fase7c-inicio.md`, un commit local por tarea) y el cambio de categorías únicas (D47). Falta tu verificación visual y redactar el plan de la Fase 8.
 
 ## 3. Trabajo completado
 - Dominio (Fase 4): dinero, fechas, validación de movimientos, saldos, deudas, validación en el tiempo (`checkChange`), apertura y arreglo, reportes de Inicio, periodos, categorías.
@@ -16,7 +16,9 @@ Ninguna en curso. Cerrada la Fase 7B (plan `2026-11-19-fase7b-registrar-e-histor
 - Fase 6: tokens de Stitch, fuente Inter con respaldo, íconos Material Symbols (`expo-symbols`), componentes base de vidrio, barra flotante solo con íconos con "+" elevado (`expo-router/ui`) y 5 esqueletos de pantalla.
 - Fase 7A: notificador de cambios y `useQuery`, repositorio `ledger`, componentes de lista/formulario/hojas, pantallas de Categorías y Billeteras (grilla con saldo por moneda, ocultas, deudas y bancos en lectura), detalle de billetera (movimientos, arreglo de saldo, ocultar, transferir) y `parseBalanceInput` en el dominio.
 - Fase 7B: Registrar movimiento (gasto, ingreso, transferencia, fecha, préstamo con deuda existente o nueva atómica, aviso de saldo insuficiente), Historial (grupos por día sin hora, filtros, modo de edición) y edición/eliminación de movimientos con validación de saldo en el tiempo.
-- Decisiones D32–D46 registradas (D36 y D38–D46 pendientes de confirmación).
+- Categorías únicas sin tipo (D47) con fusión automática de duplicados al arrancar.
+- Fase 7C: geometría de gráficos, presentador de Inicio, componentes (resumen con selector de alcance, ojo y proyección; dona; flujo con umbral) y la pantalla de Inicio con ajustes persistentes en `device_settings`.
+- Decisiones D32–D49 registradas (D45–D47 aceptadas; D36, D38–D44 y D48–D49 pendientes de confirmación).
 
 ## 4. Archivos creados o modificados
 - `src/data/{local,repositories}/*`, `src/data/{index,RepositoriesProvider}`, `src/validation/inputs.ts`, `src/lib/id.ts`, `jest.setup.ts`.
@@ -25,10 +27,10 @@ Ninguna en curso. Cerrada la Fase 7B (plan `2026-11-19-fase7b-registrar-e-histor
 - Documentos de progreso y `DEVELOPMENT_ROADMAP.md`.
 
 ## 5. Pruebas ejecutadas y resultados
-- `npm test` → **617/617 pruebas** (46 suites); `npm run typecheck` y `npx expo lint` limpios; Metro empaqueta el bundle de Android (HTTP 200).
+- `npm test` → **732/732 pruebas** (50 suites); `npm run typecheck` y `npx expo lint` limpios; Metro empaqueta el bundle de Android (HTTP 200).
 - Pureza: `src/domain/` sin imports de `@/data`, React Native, Expo, PowerSync ni Supabase.
 - Las pruebas de datos usan SQLite real (`node:sqlite`), no las vistas de PowerSync (D38).
-- La base real y la interfaz de las Fases 5–7B **no se verificaron visualmente**: el emulador se colgó dos veces el 2026-11-19 y el usuario pidió suspender la verificación del agente; `logcat` no mostró un fallo fatal.
+- La base real y la interfaz de las Fases 5–7C **no se verificaron visualmente**: el emulador se colgó dos veces el 2026-11-19 y el usuario pidió suspender la verificación del agente; `logcat` no mostró un fallo fatal.
 
 ## 6. Errores conocidos
 - Un proceso `expo start` antiguo en el puerto 8081 dejó de responder al empaquetar (ya detenido). Usar un solo Metro. Hay cambios nativos sin compilar (`app.json`: `userInterfaceStyle` y plugin `expo-font`); recompilar con `npx expo run:android --no-bundler` cuando quieras.
@@ -38,11 +40,11 @@ Ninguna en curso. Cerrada la Fase 7B (plan `2026-11-19-fase7b-registrar-e-histor
 
 ## 7. Trabajo pendiente
 - **Verificación visual (usuario):** lista de comprobación de la Fase 6 en `PENDING_TASKS.md`; además, la base real de la Fase 5 (el contador provisional se quitó de Inicio: la base se abre en el arranque; si falla se mostrará "No se pudo abrir la base de datos").
-- Plan 7C (Inicio con resumen, selector de alcance, dona y gráfico de flujo con `react-native-svg`); decidir el diseño previo en Stitch de las pantallas faltantes.
-- Confirmar D36 y D38–D46; config plugin para `cmake.dir`.
+- Plan de la Fase 8 (sugerencia, confirmación y descarte de periodo mensual); pantallas faltantes de `DESIGN_SYSTEM.md` §8 (Ajustes, inicio de sesión, etc.).
+- Confirmar D36, D38–D44 y D48–D49; config plugin para `cmake.dir`.
 
 ## 8. Siguiente acción recomendada
-Verificar las pantallas en el emulador (lista y pasos en `PENDING_TASKS.md`) y pedir el plan 7C.
+Recompilar el development build, verificar las pantallas en el emulador (lista en `PENDING_TASKS.md`) y pedir el plan de la Fase 8.
 
 ## 9. Configuración o preparación externa pendiente
 - Más adelante: cuenta de Expo + EAS CLI (Fase 11); proyecto de desarrollo en Supabase y cuenta de PowerSync (Fase 9).

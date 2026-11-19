@@ -44,3 +44,8 @@
   - T1 fechas del Historial y deuda nueva atómica (`9e267e4`), T2 componentes (`e5735fb`), T3 Registrar (`940e701`), T4 Historial (`7cd1e2a`), T5 editar y eliminar movimientos (`aae3081`).
   - 617 pruebas en verde (46 suites), typecheck y lint limpios; `expo export` de Android correcto (todas las pantallas compilan).
   - **No verificado visualmente** (a cargo del usuario, ver `PENDING_TASKS.md`).
+- **Categorías únicas sin tipo (D47)** (commit `80ca587`): se quitó el tipo gasto/ingreso de las categorías en dominio, datos y pantallas; fusión automática de duplicados existentes al arrancar.
+- **Fase 7C — Inicio** (plan `2026-11-19-fase7c-inicio.md`, tareas 1–4 con commit local; la 5 es este cierre):
+  - T1 geometría de gráficos y `react-native-svg` (`e0ee616`), T2 presentador de Inicio (`30e1d0e`), T3 componentes de resumen, dona y flujo (`fa6e074`), T4 pantalla de Inicio (`63187cf`).
+  - **La Fase 7 queda completa en código.** 732 pruebas en verde (50 suites), typecheck y lint limpios; `expo export` de Android correcto.
+  - **No verificado visualmente** (a cargo del usuario, ver `PENDING_TASKS.md`).

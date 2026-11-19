@@ -59,10 +59,26 @@
 3. Abrir la app "finkash" en el emulador (o pulsar `a` en la terminal de Expo). Los cambios de JavaScript/TypeScript se ven solos (Fast Refresh) mientras Metro está abierto.
 4. Los cambios nativos (`app.json`, nuevos módulos nativos) requieren recompilar: `npx expo run:android --no-bundler`.
 
+## Fase 7C (en código; pendiente de tu verificación visual)
+- [x] Plan `2026-11-19-fase7c-inicio.md` ejecutado (tareas 1–4).
+- [ ] **Recompilar el development build** (hay un módulo nativo nuevo, `react-native-svg`): `npx expo run:android --no-bundler`; después, `npx expo start` y abrir la app.
+- [ ] **Verificación visual (usuario) de Inicio:**
+  - empieza con "Hola!" y sin título; resumen con Disponible / Gastado / Restante;
+  - chip de alcance: "Saldo general" con casillas por billetera, y "Solo <billetera>"; cambia todo Inicio a la vez;
+  - ojo: todo monto pasa a `****` (resumen, dona, leyenda, variación y "Límite") y vuelve al tocarlo; se conserva al cerrar y reabrir;
+  - "Ver proyectado" solo en Saldo general;
+  - dona "Gastos del mes": tocar una fila de la leyenda resalta su segmento; sin gastos dice "Sin gastos";
+  - "Flujo del mes": curva con degradado, variación en verde/rojo; tocar el título abre "Umbral de aviso"; con umbral aparece la línea roja discontinua y "Límite: S/ …"; con el restante bajo el umbral, el restante sale en rojo;
+  - con una billetera en dólares: dos líneas en el resumen y selector "S/ | $" para los gráficos;
+  - en una instalación sin billeteras: "Crea tu primera billetera".
+- [ ] **Categorías únicas (D47):** al abrir la app se fusionan las categorías repetidas de la versión anterior; comprobar que Categorías muestra una sola "Otros", "Préstamo" y "Devolución / Reembolso", que los movimientos antiguos siguen con su categoría, y que no se ve "Gasto/Ingreso" en ninguna categoría.
+- [ ] Anotar aquí las diferencias con Stitch que veas.
+- [ ] Confirmar D48–D49 (y las decisiones D36, D38–D44 aún pendientes).
+
 ## Siguiente
 - [ ] Config plugin de Expo para fijar `cmake.dir` (hoy en `android/local.properties`, local).
 - [ ] Aprobar o corregir D36 (detalles de implementación del dominio).
-- [ ] Plan 7C (Inicio con resumen, selector de alcance, dona y gráfico de flujo).
+- [ ] Plan de la Fase 8 (periodos: sugerencia, confirmación y descarte).
 
 ## Pendientes de diseño
 - [ ] Decidir si el nuevo Registrar (3 opciones) y las pantallas faltantes (`DESIGN_SYSTEM.md` §8) se diseñan antes en Stitch o se construyen con los componentes existentes. Debe estar resuelto antes del plan de interfaz (Fases 6–7).
