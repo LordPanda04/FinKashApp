@@ -7,6 +7,8 @@ import Historial from '@/app/(tabs)/historial';
 import Inicio from '@/app/(tabs)/index';
 import TabsLayout from '@/app/(tabs)/_layout';
 import Registrar from '@/app/(tabs)/registrar';
+import { RepositoriesContext } from '@/data/RepositoriesContext';
+import { createFakeRepositories } from '@/test-utils/fakeRepositories';
 
 let mockInsets = { top: 0, bottom: 0, left: 0, right: 0 };
 jest.mock('react-native-safe-area-context', () => ({
@@ -20,7 +22,13 @@ const routes = {
   '(tabs)/historial': Historial,
   '(tabs)/registrar': Registrar,
   '(tabs)/billeteras': Billeteras,
-  '(tabs)/categorias': Categorias,
+  '(tabs)/categorias': function CategoriasConDatos() {
+    return (
+      <RepositoriesContext.Provider value={createFakeRepositories().repos}>
+        <Categorias />
+      </RepositoriesContext.Provider>
+    );
+  },
 };
 
 const LABELS = ['Inicio', 'Historial', 'Registrar movimiento', 'Billeteras', 'Categorías'];
@@ -113,7 +121,13 @@ describe('barra de pestañas', () => {
   });
 });
 
-describe('esqueletos de pantalla', () => {
+describe('pantallas', () => {
+  it('Categorías muestra su título y sus datos', async () => {
+    await renderRouter(routes, { initialUrl: '/categorias' });
+    expect(screen.getByRole('header', { name: 'Categorías' })).toBeOnTheScreen();
+    expect(await screen.findAllByText('Otros')).toHaveLength(2);
+  });
+
   it('Inicio: saludo sin título de pantalla', async () => {
     await renderRouter(routes, { initialUrl: '/' });
     expect(screen.getByText('Hola!')).toBeOnTheScreen();
@@ -124,7 +138,6 @@ describe('esqueletos de pantalla', () => {
     ['/historial', 'Historial', 'Aquí irá el historial de movimientos.'],
     ['/registrar', 'Registrar movimiento', 'Aquí irá el formulario para registrar movimientos.'],
     ['/billeteras', 'Billeteras', 'Aquí irán tus billeteras, tarjetas y deudas.'],
-    ['/categorias', 'Categorías', 'Aquí irán tus categorías de gasto e ingreso.'],
   ])('%s muestra su título y su estado vacío en español', async (url, title, empty) => {
     await renderRouter(routes, { initialUrl: url });
     expect(screen.getByRole('header', { name: title })).toBeOnTheScreen();
