@@ -60,6 +60,10 @@ export function SummaryCard({
         <HeaderIconButton icon={hidden ? 'visibility_off' : 'visibility'} label={hidden ? 'Mostrar montos' : 'Ocultar montos'} onPress={onToggleHidden} />
       </View>
 
+      <AppText variant="labelMd" color={colors.onSurfaceMuted}>
+        {view.periodLabel}
+      </AppText>
+
       <Row label="Disponible">{lines('availableMinor')}</Row>
       <Row label="Gastado">{lines('spentMinor')}</Row>
       <Row label="Restante">{lines('remainingMinor')}</Row>

@@ -220,6 +220,23 @@ describe('buildHomeView — dona y flujo', () => {
   });
 });
 
+describe('buildHomeView — etiqueta del periodo activo', () => {
+  it('"Periodo desde el 1 de noviembre" cuando el periodo empieza el día 1', () => {
+    expect(buildHomeView(input()).periodLabel).toBe('Periodo desde el 1 de noviembre');
+  });
+
+  it('usa el día y el mes del inicio del periodo, sin cero a la izquierda', () => {
+    expect(buildHomeView(input({ period: { start: '2026-11-15', end: TODAY } })).periodLabel).toBe('Periodo desde el 15 de noviembre');
+    expect(buildHomeView(input({ period: { start: '2026-03-05', end: '2026-03-20' }, today: '2026-03-20' })).periodLabel).toBe('Periodo desde el 5 de marzo');
+  });
+
+  it('también está presente cuando no hay billeteras en el alcance', () => {
+    const v = buildHomeView(input({ wallets: [], state: { accounts: [], movements: [], categories, debts: [] } }));
+    expect(v.empty).toBe(true);
+    expect(v.periodLabel).toBe('Periodo desde el 1 de noviembre');
+  });
+});
+
 describe('maskAmount', () => {
   it('oculta con ****', () => {
     expect(maskAmount('S/ 1,840.00', true)).toBe('****');

@@ -365,3 +365,41 @@ describe('InicioScreen — nombre del usuario (D50)', () => {
     expect(greeting.props.numberOfLines).toBe(1);
   });
 });
+
+describe('InicioScreen — periodo mensual', () => {
+  it('con sugerencia pendiente muestra el aviso bajo el saludo', async () => {
+    await open({ suggestPeriod: true });
+    expect(await screen.findByText('Iniciar nuevo periodo')).toBeOnTheScreen();
+    expect(screen.getByText('Es noviembre. Revisa tus saldos y empieza el periodo.')).toBeOnTheScreen();
+  });
+
+  it('sin sugerencia pendiente no hay aviso', async () => {
+    await open();
+    await screen.findByText('Hola!');
+    expect(screen.queryByText('Iniciar nuevo periodo')).toBeNull();
+  });
+
+  it('"Iniciar periodo" lleva a la pantalla de confirmación', async () => {
+    await open({ suggestPeriod: true });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Iniciar periodo' }));
+    expect(mockPush).toHaveBeenCalledWith('/periodo');
+  });
+
+  it('"Ahora no" descarta el mes actual y el aviso desaparece', async () => {
+    const fake = await open({ suggestPeriod: true });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Ahora no' }));
+    await waitFor(() => expect(screen.queryByText('Iniciar nuevo periodo')).toBeNull());
+    expect(fake.calls.dismissPeriod).toHaveBeenCalledWith('2026-11');
+  });
+
+  it('sin billeteras no muestra el aviso aunque haya sugerencia pendiente', async () => {
+    await open({ suggestPeriod: true, wallets: [], accounts: [], movements: [] });
+    expect(await screen.findByText('Crea tu primera billetera')).toBeOnTheScreen();
+    expect(screen.queryByText('Iniciar nuevo periodo')).toBeNull();
+  });
+
+  it('el resumen muestra desde cuándo empieza el periodo activo', async () => {
+    await open({ period: { start: '2026-11-15', end: '2026-11-20' } });
+    expect(await screen.findByText('Periodo desde el 15 de noviembre')).toBeOnTheScreen();
+  });
+});

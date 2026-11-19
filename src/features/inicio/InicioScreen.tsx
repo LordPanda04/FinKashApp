@@ -6,7 +6,7 @@ import { ZodError } from 'zod';
 import { useRepositories } from '@/data/RepositoriesContext';
 import { useQuery } from '@/data/useQuery';
 import { parseAmountInput, type Currency } from '@/domain/money/money';
-import { todayInLima, type IsoDate } from '@/lib/dates';
+import { MONTH_NAMES_ES, monthOf, todayInLima, type IsoDate } from '@/lib/dates';
 import { AppText } from '@/ui/AppText';
 import { GlassCard } from '@/ui/GlassCard';
 import { NoticeCard } from '@/ui/NoticeCard';
@@ -17,6 +17,7 @@ import { colors } from '@/ui/tokens';
 import { ExpensesCard } from './ExpensesCard';
 import { FlowCard } from './FlowCard';
 import { NameSheet } from './NameSheet';
+import { PeriodSuggestionCard } from '../periodos/PeriodSuggestionCard';
 import { buildHomeView, greetingText } from './presenter';
 import { ScopeSheet } from './ScopeSheet';
 import { SummaryCard } from './SummaryCard';
@@ -25,7 +26,7 @@ import { ThresholdSheet } from './ThresholdSheet';
 /** Pestaña Inicio: saludo, resumen de saldos, "Gastos del mes" y "Flujo del mes" (`DESIGN_SYSTEM.md` §6.1 y §10.1). */
 export function InicioScreen({ today: todayProp }: { today?: IsoDate }) {
   const router = useRouter();
-  const { settings, wallets: walletsRepo } = useRepositories();
+  const { settings, wallets: walletsRepo, periods } = useRepositories();
   const today = todayProp ?? todayInLima(new Date());
   const [scopeOpen, setScopeOpen] = useState(false);
   const [thresholdOpen, setThresholdOpen] = useState(false);
@@ -40,6 +41,7 @@ export function InicioScreen({ today: todayProp }: { today?: IsoDate }) {
     period: await r.periods.activeRange(),
     device: await r.settings.getDevice(),
     thresholds: await r.settings.listThresholds(),
+    suggestPeriod: await r.periods.shouldSuggest(),
   }));
 
   // Mientras no hay datos el saludo es "Hola!" y no se puede tocar (todavía no se sabe el nombre).
@@ -96,6 +98,14 @@ export function InicioScreen({ today: todayProp }: { today?: IsoDate }) {
     <Screen backdrop="primary">
       <ScrollView contentContainerStyle={{ gap: 20, paddingBottom: 8 }} showsVerticalScrollIndicator={false}>
         {greeting}
+
+        {data.suggestPeriod && data.wallets.length > 0 ? (
+          <PeriodSuggestionCard
+            monthLabel={MONTH_NAMES_ES[Number(monthOf(today).slice(5, 7)) - 1] ?? ''}
+            onStart={() => router.push('/periodo' as Href)}
+            onDismiss={() => periods.dismiss(monthOf(today))}
+          />
+        ) : null}
 
         {data.wallets.length === 0 ? (
           <GlassCard style={{ gap: 12 }}>

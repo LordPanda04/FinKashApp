@@ -60,6 +60,8 @@ export interface HomeView {
   empty: boolean;
   scopeLabel: string;
   monthLabel: string;
+  /** Desde cuándo va el periodo activo: "Periodo desde el 1 de noviembre". */
+  periodLabel: string;
   /** Monedas con cuentas en el alcance, PEN primero. */
   currencies: Currency[];
   blocks: Partial<Record<Currency, CurrencyBlock>>;
@@ -89,14 +91,21 @@ export function scopeAccountIds(
   return { walletAccountIds, cardAccountIds };
 }
 
+/** "Periodo desde el 15 de noviembre" a partir del día de inicio del periodo activo. */
+function periodLabelOf(start: IsoDate): string {
+  const month = MONTH_NAMES_ES[Number(start.slice(5, 7)) - 1] ?? '';
+  return `Periodo desde el ${Number(start.slice(8, 10))} de ${month.toLowerCase()}`;
+}
+
 export function buildHomeView(input: HomeInput): HomeView {
   const { state, wallets, cards, categories, period, today, scope, thresholds } = input;
   const { walletAccountIds, cardAccountIds } = scopeAccountIds(state, wallets, cards, scope);
   const monthLabel = MONTH_NAMES_ES[Number(period.end.slice(5, 7)) - 1] ?? '';
+  const periodLabel = periodLabelOf(period.start);
   const scopeLabel = scope === 'general' ? 'Saldo general' : (wallets.find((w) => w.id === scope)?.name ?? '');
 
   if (walletAccountIds.length === 0) {
-    return { empty: true, scopeLabel, monthLabel, currencies: [], blocks: {}, donut: {}, flow: {} };
+    return { empty: true, scopeLabel, monthLabel, periodLabel, currencies: [], blocks: {}, donut: {}, flow: {} };
   }
 
   const present = new Set(state.accounts.filter((a) => walletAccountIds.includes(a.id)).map((a) => a.currency));
@@ -133,7 +142,7 @@ export function buildHomeView(input: HomeInput): HomeView {
     };
   }
 
-  return { empty: false, scopeLabel, monthLabel, currencies, blocks, donut, flow };
+  return { empty: false, scopeLabel, monthLabel, periodLabel, currencies, blocks, donut, flow };
 }
 
 /** Con el ojo cerrado, todo monto se reemplaza por `****`. */

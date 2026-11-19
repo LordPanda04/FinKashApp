@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { RepositoriesContext } from '@/data/RepositoriesContext';
 import type { WalletRecord } from '@/data/types';
 import type { Account } from '@/domain/ledger/types';
@@ -143,15 +143,16 @@ describe('PeriodoScreen — confirmar', () => {
 
   it('dos toques seguidos en Confirmar llaman al repositorio una sola vez', async () => {
     const fake = await open();
-    // Pendiente 300 ms (D49: una promesa que nunca resuelve cuelga `act`): el segundo toque cae dentro de ese margen.
+    // `await fireEvent.press` espera la promesa del manejador: los dos toques se disparan a la vez.
     const original = fake.repos.periods.confirm;
     (fake.repos.periods as { confirm: typeof original }).confirm = async (input) => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 50));
       return original(input);
     };
     const button = confirmButton();
-    await fireEvent.press(button);
-    await fireEvent.press(button);
+    await act(async () => {
+      await Promise.all([fireEvent.press(button), fireEvent.press(button)]);
+    });
     await waitFor(() => expect(mockBack).toHaveBeenCalledTimes(1));
     expect(fake.calls.confirmPeriod).toHaveBeenCalledTimes(1);
   });

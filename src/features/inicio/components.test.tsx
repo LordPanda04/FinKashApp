@@ -1,9 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import type { WalletRecord } from '@/data/types';
 import { DonutChart } from '@/ui/charts/DonutChart';
 import { FlowLineChart } from '@/ui/charts/FlowLineChart';
 import { ExpensesCard } from './ExpensesCard';
 import { FlowCard } from './FlowCard';
+import { PeriodSuggestionCard } from '../periodos/PeriodSuggestionCard';
 import { NameSheet } from './NameSheet';
 import type { CurrencyBlock, HomeView } from './presenter';
 import { ScopeSheet } from './ScopeSheet';
@@ -103,11 +104,16 @@ describe('FlowLineChart', () => {
 
 function view(over: Partial<HomeView> = {}, blockOver: Partial<CurrencyBlock> = {}): HomeView {
   const pen: CurrencyBlock = { currency: 'PEN', availableMinor: 121000, spentMinor: 15530, remainingMinor: 105470, projectedMinor: 50000, belowThreshold: false, thresholdMinor: null, ...blockOver };
-  return { empty: false, scopeLabel: 'Saldo general', monthLabel: 'Noviembre', currencies: ['PEN'], blocks: { PEN: pen }, donut: {}, flow: {}, ...over };
+  return { empty: false, scopeLabel: 'Saldo general', monthLabel: 'Noviembre', periodLabel: 'Periodo desde el 1 de noviembre', currencies: ['PEN'], blocks: { PEN: pen }, donut: {}, flow: {}, ...over };
 }
 const summaryProps = { hidden: false, onToggleHidden: jest.fn(), projectionOn: false, onToggleProjection: jest.fn(), onOpenScope: jest.fn() };
 
 describe('SummaryCard', () => {
+  it('muestra la etiqueta del periodo activo, también con los montos ocultos', async () => {
+    await render(<SummaryCard view={view()} {...summaryProps} hidden />);
+    expect(screen.getByText('Periodo desde el 1 de noviembre')).toBeOnTheScreen();
+  });
+
   it('muestra Disponible, Gastado y Restante', async () => {
     await render(<SummaryCard view={view()} {...summaryProps} />);
     expect(screen.getByText('Disponible')).toBeOnTheScreen();
@@ -318,13 +324,14 @@ describe('NameSheet', () => {
   });
 
   it('doble toque en Continuar guarda una sola vez', async () => {
-    const onSave = jest.fn().mockImplementation(() => new Promise<null>((resolve) => setTimeout(() => resolve(null), 30)));
+    const onSave = jest.fn().mockImplementation(() => new Promise<null>((resolve) => setTimeout(() => resolve(null), 50)));
     await render(sheet({ onSave }));
     await fireEvent.changeText(screen.getByLabelText('Nombre'), 'Ana');
     const button = screen.getByRole('button', { name: 'Continuar' });
-    await fireEvent.press(button);
-    await fireEvent.press(button);
-    await new Promise((r) => setTimeout(r, 80));
+    // Los dos toques en el mismo instante: solo el guardia (`ref`) los distingue, el estado aún no se actualizó.
+    await act(async () => {
+      await Promise.all([fireEvent.press(button), fireEvent.press(button)]);
+    });
     expect(onSave).toHaveBeenCalledTimes(1);
   });
 
@@ -409,5 +416,36 @@ describe('FlowCard', () => {
     await render(<FlowCard netChangeMinor={101550} currency="PEN" series={series} thresholdMinor={30000} hidden onOpenThreshold={() => undefined} />);
     expect(screen.getByText('Límite: ****')).toBeOnTheScreen();
     expect(hasMoneyDigits(textsAndLabels())).toBe(false);
+  });
+});
+
+describe('PeriodSuggestionCard', () => {
+  it('muestra el aviso con el mes y las dos acciones', async () => {
+    await render(<PeriodSuggestionCard monthLabel="Noviembre" onStart={jest.fn()} onDismiss={jest.fn()} />);
+    expect(screen.getByText('Iniciar nuevo periodo')).toBeOnTheScreen();
+    expect(screen.getByText('Es noviembre. Revisa tus saldos y empieza el periodo.')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Iniciar periodo' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Ahora no' })).toBeOnTheScreen();
+  });
+
+  it('"Iniciar periodo" llama onStart y "Ahora no" llama onDismiss', async () => {
+    const onStart = jest.fn();
+    const onDismiss = jest.fn();
+    await render(<PeriodSuggestionCard monthLabel="Noviembre" onStart={onStart} onDismiss={onDismiss} />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Iniciar periodo' }));
+    expect(onStart).toHaveBeenCalledTimes(1);
+    await fireEvent.press(screen.getByRole('button', { name: 'Ahora no' }));
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('un doble toque en "Ahora no" descarta una sola vez', async () => {
+    // `await fireEvent.press` espera la promesa del manejador, así que los dos toques se disparan a la vez.
+    const onDismiss = jest.fn().mockImplementation(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
+    await render(<PeriodSuggestionCard monthLabel="Noviembre" onStart={jest.fn()} onDismiss={onDismiss} />);
+    const button = screen.getByRole('button', { name: 'Ahora no' });
+    await act(async () => {
+      await Promise.all([fireEvent.press(button), fireEvent.press(button)]);
+    });
+    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 });
