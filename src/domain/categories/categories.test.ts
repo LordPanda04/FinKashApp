@@ -2,12 +2,10 @@ import type { Category, LedgerState, Movement } from '@/domain/ledger/types';
 import { planCategoryDeletion } from './categories';
 
 const baseCategories: Category[] = [
-  { id: 'food', kind: 'expense', systemKey: null },
-  { id: 'salary', kind: 'income', systemKey: null },
-  { id: 'otherExp', kind: 'expense', systemKey: 'other' },
-  { id: 'otherInc', kind: 'income', systemKey: 'other' },
-  { id: 'loanExp', kind: 'expense', systemKey: 'loan' },
-  { id: 'loanInc', kind: 'income', systemKey: 'loan' },
+  { id: 'food', systemKey: null },
+  { id: 'salary', systemKey: null },
+  { id: 'other', systemKey: 'other' },
+  { id: 'loan', systemKey: 'loan' },
 ];
 
 function mv(id: string, categoryId: string | null, type: Movement['type'] = 'expense'): Movement {
@@ -31,30 +29,22 @@ function stateOf(movements: Movement[], categories: Category[] = baseCategories)
 }
 
 describe('planCategoryDeletion', () => {
-  it('reasigna los movimientos de un gasto a "Otros" de gasto', () => {
-    const s = stateOf([mv('a', 'food'), mv('b', 'food'), mv('c', 'otherExp')]);
+  it('reasigna los movimientos (gastos e ingresos por igual) a la única "Otros"', () => {
+    const s = stateOf([mv('a', 'food'), mv('b', 'food', 'income'), mv('c', 'other')]);
     expect(planCategoryDeletion('food', s)).toEqual({
       ok: true,
-      value: { reassignToCategoryId: 'otherExp', movementIds: ['a', 'b'] },
-    });
-  });
-
-  it('reasigna los movimientos de un ingreso a "Otros" de ingreso', () => {
-    const s = stateOf([mv('a', 'salary', 'income'), mv('b', 'food')]);
-    expect(planCategoryDeletion('salary', s)).toEqual({
-      ok: true,
-      value: { reassignToCategoryId: 'otherInc', movementIds: ['a'] },
+      value: { reassignToCategoryId: 'other', movementIds: ['a', 'b'] },
     });
   });
 
   it('una categoría sin movimientos devuelve lista vacía', () => {
-    expect(planCategoryDeletion('food', stateOf([mv('c', 'otherExp')]))).toEqual({
+    expect(planCategoryDeletion('salary', stateOf([mv('c', 'other')]))).toEqual({
       ok: true,
-      value: { reassignToCategoryId: 'otherExp', movementIds: [] },
+      value: { reassignToCategoryId: 'other', movementIds: [] },
     });
   });
 
-  it.each(['otherExp', 'otherInc', 'loanExp', 'loanInc'])('"%s" es de sistema: CATEGORY_PROTECTED', (id) => {
+  it.each(['other', 'loan'])('"%s" es de sistema: CATEGORY_PROTECTED', (id) => {
     const r = planCategoryDeletion(id, stateOf([]));
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('CATEGORY_PROTECTED');
@@ -66,17 +56,13 @@ describe('planCategoryDeletion', () => {
     if (!r.ok) expect(r.error.code).toBe('CATEGORY_NOT_FOUND');
   });
 
-  it('si falta "Otros" del mismo tipo devuelve SYSTEM_CATEGORY_MISSING', () => {
-    const withoutOtherExp = baseCategories.filter((c) => c.id !== 'otherExp');
-    const r = planCategoryDeletion('food', stateOf([mv('a', 'food')], withoutOtherExp));
+  it('si falta "Otros" devuelve SYSTEM_CATEGORY_MISSING', () => {
+    const withoutOther = baseCategories.filter((c) => c.id !== 'other');
+    const r = planCategoryDeletion('food', stateOf([mv('a', 'food')], withoutOther));
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe('SYSTEM_CATEGORY_MISSING');
-  });
-
-  it('"Otros" del otro tipo no sirve de reemplazo', () => {
-    const onlyOtherInc = baseCategories.filter((c) => c.id !== 'otherExp');
-    const r = planCategoryDeletion('food', stateOf([], onlyOtherInc));
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe('SYSTEM_CATEGORY_MISSING');
+    if (!r.ok) {
+      expect(r.error.code).toBe('SYSTEM_CATEGORY_MISSING');
+      expect(r.error.message).toContain('«Otros»');
+    }
   });
 });

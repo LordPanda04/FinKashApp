@@ -224,7 +224,7 @@ export function MovementForm({
       <SelectorSheet
         visible={sheet === 'category'}
         title="Categoría"
-        options={categoryOptions(data.categories, values.kind === 'income' ? 'income' : 'expense').map((c) => ({ value: c.id, label: c.name, icon: c.icon as IconName, color: c.color }))}
+        options={categoryOptions(data.categories).map((c) => ({ value: c.id, label: c.name, icon: c.icon as IconName, color: c.color }))}
         value={values.categoryId}
         onSelect={(id) => patch({ categoryId: id, debtId: null, newDebt: null })}
         onClose={() => setSheet(null)}

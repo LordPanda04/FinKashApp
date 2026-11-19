@@ -25,8 +25,8 @@ afterEach(async () => {
 
 const movements = (clock?: () => Date) => createMovementRepository(db, deps(clock));
 
-async function categoryId(kind: 'expense' | 'income'): Promise<string> {
-  return (await db.getOptional<{ id: string }>("SELECT id FROM categories WHERE kind = ? AND system_key = 'other'", [kind]))!.id;
+async function categoryId(_kind?: 'expense' | 'income'): Promise<string> {
+  return (await db.getOptional<{ id: string }>("SELECT id FROM categories WHERE system_key = 'other'"))!.id;
 }
 
 /** Billetera PEN con apertura opcional (fechada hoy según el reloj). */
@@ -249,17 +249,20 @@ describe('list', () => {
     const b = await wallet();
     const m1 = await movements().create(await income(a, 10000, '2026-11-01'));
     const m2 = await movements().create(await income(b, 5000, '2026-11-10'));
-    const m3 = await movements().create(await expense(a, 1000, '2026-11-15'));
+    await db.execute("INSERT INTO categories (id, name, color, icon, system_key, sort_order) VALUES ('food', 'Comida', '#1C9C4D', 'restaurant', NULL, 9)");
+    const m3 = await movements().create({ ...(await expense(a, 1000, '2026-11-15')), categoryId: 'food' });
     if (!m1.ok || !m2.ok || !m3.ok) throw new Error('setup');
     expect((await movements().list()).map((m) => m.id)).toEqual([m3.value.id, m2.value.id, m1.value.id]);
     expect((await movements().list({ from: '2026-11-05', to: '2026-11-15' })).map((m) => m.id)).toEqual([m3.value.id, m2.value.id]);
     expect((await movements().list({ accountId: b })).map((m) => m.id)).toEqual([m2.value.id]);
-    expect((await movements().list({ categoryId: await categoryId('expense') })).map((m) => m.id)).toEqual([m3.value.id]);
+    expect((await movements().list({ categoryId: 'food' })).map((m) => m.id)).toEqual([m3.value.id]);
+    // La categoría no tiene tipo: la misma sirve para ingresos y gastos.
+    expect((await movements().list({ categoryId: await categoryId() })).map((m) => m.id)).toEqual([m2.value.id, m1.value.id]);
   });
 });
 
-async function loanCategory(kind: 'expense' | 'income'): Promise<string> {
-  return (await db.getOptional<{ id: string }>("SELECT id FROM categories WHERE kind = ? AND system_key = 'loan'", [kind]))!.id;
+async function loanCategory(_kind?: 'expense' | 'income'): Promise<string> {
+  return (await db.getOptional<{ id: string }>("SELECT id FROM categories WHERE system_key = 'loan'"))!.id;
 }
 const carlos = { counterpartyName: 'Carlos', counterpartyType: 'person' } as const;
 

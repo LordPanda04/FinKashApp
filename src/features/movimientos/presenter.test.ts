@@ -26,13 +26,13 @@ const card = (accountId: string, name: string, isHidden = false): CardRecord => 
   accountId, name, issuer: null, icon: 'credit_card', color: '#003DA5', creditLimitMinor: 100000, closingDay: null, dueDay: null, isHidden,
 });
 const cards = [card('bcp', 'Tarjeta BCP'), card('hiddenCard', 'Tarjeta oculta', true)];
-const cat = (id: string, kind: 'expense' | 'income', name: string, systemKey: 'other' | 'loan' | null = null, sortOrder = 0): CategoryRecord => ({
-  id, kind, name, color: '#1C9C4D', icon: 'category', systemKey, sortOrder,
+const cat = (id: string, name: string, systemKey: 'other' | 'loan' | null = null, sortOrder = 0): CategoryRecord => ({
+  id, name, color: '#1C9C4D', icon: 'category', systemKey, sortOrder,
 });
 const categories = [
-  cat('food', 'expense', 'Comida', null, 1),
-  cat('loanExp', 'expense', 'Préstamo', 'loan', 2),
-  cat('salary', 'income', 'Sueldo', null, 1),
+  cat('food', 'Comida', null, 1),
+  cat('loan', 'Préstamo', 'loan', 2),
+  cat('salary', 'Sueldo', null, 3),
 ];
 
 describe('accountOptions', () => {
@@ -72,9 +72,14 @@ describe('destOptions', () => {
 });
 
 describe('categoryOptions', () => {
-  it('filtra por tipo y ordena', () => {
-    expect(categoryOptions(categories, 'expense').map((c) => c.id)).toEqual(['food', 'loanExp']);
-    expect(categoryOptions(categories, 'income').map((c) => c.id)).toEqual(['salary']);
+  it('ofrece todas las categorías por orden (sin tipo) para gastos e ingresos', () => {
+    expect(categoryOptions(categories).map((c) => c.id)).toEqual(['food', 'loan', 'salary']);
+  });
+
+  it('no modifica la lista recibida', () => {
+    const copy = [...categories].reverse();
+    categoryOptions(copy);
+    expect(copy[0]!.id).toBe('salary');
   });
 });
 
@@ -134,15 +139,15 @@ describe('buildMovementDraft', () => {
   });
 
   it('categoría "Préstamo" sin deuda → DEBT_REQUIRED; con deuda existente la vincula', () => {
-    expect(err({ categoryId: 'loanExp' })).toBe('DEBT_REQUIRED');
-    const r = buildMovementDraft({ ...base, categoryId: 'loanExp', debtId: 'd1' }, ctx);
+    expect(err({ categoryId: 'loan' })).toBe('DEBT_REQUIRED');
+    const r = buildMovementDraft({ ...base, categoryId: 'loan', debtId: 'd1' }, ctx);
     expect(r.ok && r.value.draft.debtId).toBe('d1');
     expect(r.ok && r.value.newDebt).toBeNull();
   });
 
   it('categoría "Préstamo" con deuda nueva devuelve los datos de la deuda y debtId null', () => {
     const newDebt = { counterpartyName: 'Carlos', counterpartyType: 'person' as const };
-    const r = buildMovementDraft({ ...base, categoryId: 'loanExp', newDebt }, ctx);
+    const r = buildMovementDraft({ ...base, categoryId: 'loan', newDebt }, ctx);
     expect(r.ok && r.value.draft.debtId).toBeNull();
     expect(r.ok && r.value.newDebt).toEqual(newDebt);
   });

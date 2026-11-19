@@ -142,15 +142,6 @@ function validateCategoryAndDebt(movement: Movement, state: LedgerState): Result
   }
   const category = state.categories.find((c) => c.id === categoryId);
   if (!category) return err('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
-  if (category.kind !== type) {
-    return err(
-      'CATEGORY_KIND_MISMATCH',
-      type === 'expense'
-        ? 'Un gasto necesita una categoría de gasto.'
-        : 'Un ingreso necesita una categoría de ingreso.',
-    );
-  }
-
   const isLoan = category.systemKey === 'loan';
   if (isLoan && debtId === null) {
     return err('DEBT_REQUIRED', 'La categoría "Préstamo" necesita una deuda asociada.');

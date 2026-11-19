@@ -123,7 +123,7 @@ export function HistorialScreen({ today: todayProp }: { today?: IsoDate }) {
         title="Categoría"
         options={(data?.categories ?? []).map((c) => ({
           value: c.id,
-          label: `${c.name} · ${c.kind === 'expense' ? 'Gasto' : 'Ingreso'}`,
+          label: c.name,
           icon: c.icon as never,
           color: c.color,
         }))}

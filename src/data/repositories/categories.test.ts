@@ -18,57 +18,65 @@ afterEach(async () => {
 });
 
 const repo = () => createCategoryRepository(db, deps());
-const food = { kind: 'expense', name: 'Comida', color: '#FF0000', icon: 'restaurant' } as const;
+const food = { name: 'Comida', color: '#FF0000', icon: 'restaurant' };
 
-async function idOf(kind: string, systemKey: string): Promise<string> {
-  const row = await db.getOptional<{ id: string }>('SELECT id FROM categories WHERE kind = ? AND system_key = ?', [kind, systemKey]);
+async function idOf(systemKey: string): Promise<string> {
+  const row = await db.getOptional<{ id: string }>('SELECT id FROM categories WHERE system_key = ?', [systemKey]);
   return row!.id;
 }
-async function addMovement(id: string, categoryId: string): Promise<void> {
+async function addMovement(id: string, categoryId: string, type: 'expense' | 'income' = 'expense'): Promise<void> {
   await db.execute(
-    "INSERT INTO movements (id, type, occurred_on, category_id, source_account_id, amount_minor, currency) VALUES (?, 'expense', '2026-11-10', ?, 'acc', 1000, 'PEN')",
-    [id, categoryId],
+    'INSERT INTO movements (id, type, occurred_on, category_id, source_account_id, dest_account_id, amount_minor, currency) VALUES (?, ?, ?, ?, ?, ?, 1000, ?)',
+    [id, type, '2026-11-10', categoryId, type === 'expense' ? 'acc' : null, type === 'income' ? 'acc' : null, 'PEN'],
   );
 }
 
 describe('list y create', () => {
-  it('la lista inicial son las 6 categorías sembradas', async () => {
+  it('la lista inicial son las 3 categorías sembradas, sin tipo', async () => {
     const list = await repo().list();
-    expect(list).toHaveLength(6);
-    expect(list.find((c) => c.systemKey === 'loan' && c.kind === 'expense')).toMatchObject({
-      name: 'Préstamo',
-      color: '#F59E0B',
-    });
+    expect(list.map((c) => c.name)).toEqual(['Otros', 'Préstamo', 'Devolución / Reembolso']);
+    expect(list.find((c) => c.systemKey === 'loan')).toMatchObject({ name: 'Préstamo', color: '#F59E0B' });
+    for (const c of list) expect(c).not.toHaveProperty('kind');
   });
 
   it('create agrega "Comida" sin systemKey y al final del orden', async () => {
     const r = await repo().create(food);
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.value).toMatchObject({ kind: 'expense', name: 'Comida', systemKey: null, color: '#FF0000' });
+    if (r.ok) {
+      expect(r.value).toMatchObject({ name: 'Comida', systemKey: null, color: '#FF0000' });
+      expect(r.value).not.toHaveProperty('kind');
+    }
     const list = await repo().list();
-    expect(list).toHaveLength(7);
+    expect(list).toHaveLength(4);
     expect(list[list.length - 1]!.name).toBe('Comida');
   });
 
-  it('un nombre repetido en el mismo tipo (sin importar mayúsculas) da CATEGORY_DUPLICATE', async () => {
+  it('un nombre repetido (sin importar mayúsculas ni espacios) da CATEGORY_DUPLICATE', async () => {
     await repo().create(food);
     const dup = await repo().create({ ...food, name: ' comida ' });
     expect(dup.ok).toBe(false);
     if (!dup.ok) expect(dup.error.code).toBe('CATEGORY_DUPLICATE');
-    expect((await repo().create({ ...food, kind: 'income' })).ok).toBe(true);
+    const sameAsSystem = await repo().create({ ...food, name: 'otros' });
+    expect(sameAsSystem.ok).toBe(false);
+  });
+
+  it('un tipo enviado por error se ignora (las categorías no tienen tipo)', async () => {
+    const r = await repo().create({ ...food, kind: 'income' } as never);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.value).not.toHaveProperty('kind');
   });
 
   it('una entrada inválida da INPUT_INVALID y no escribe', async () => {
     const r = await repo().create({ ...food, color: 'rojo' });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('INPUT_INVALID');
-    expect(await repo().list()).toHaveLength(6);
+    expect(await repo().list()).toHaveLength(3);
   });
 });
 
 describe('update', () => {
   it('"Otros" no se puede renombrar (CATEGORY_PROTECTED) pero sí cambiar de color', async () => {
-    const id = await idOf('expense', 'other');
+    const id = await idOf('other');
     const renamed = await repo().update(id, { name: 'Varios' });
     expect(renamed.ok).toBe(false);
     if (!renamed.ok) expect(renamed.error.code).toBe('CATEGORY_PROTECTED');
@@ -95,22 +103,21 @@ describe('update', () => {
   });
 
   it('un color inválido da INPUT_INVALID', async () => {
-    const id = await idOf('expense', 'other');
-    const r = await repo().update(id, { color: 'x' });
+    const r = await repo().update(await idOf('other'), { color: 'x' });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.code).toBe('INPUT_INVALID');
   });
 });
 
 describe('remove', () => {
-  it('reasigna los movimientos a "Otros" del mismo tipo y borra la categoría', async () => {
+  it('reasigna los movimientos (gastos e ingresos) a la única "Otros" y borra la categoría', async () => {
     const c = await repo().create(food);
     if (!c.ok) throw new Error('setup');
-    await addMovement('m1', c.value.id);
-    await addMovement('m2', c.value.id);
+    await addMovement('m1', c.value.id, 'expense');
+    await addMovement('m2', c.value.id, 'income');
     const r = await repo().remove(c.value.id);
     expect(r).toEqual({ ok: true, value: { reassigned: 2 } });
-    const otros = await idOf('expense', 'other');
+    const otros = await idOf('other');
     expect(await db.getAll('SELECT id, category_id FROM movements ORDER BY id')).toEqual([
       { id: 'm1', category_id: otros },
       { id: 'm2', category_id: otros },
@@ -126,11 +133,11 @@ describe('remove', () => {
 
   it('"Préstamo" y "Otros" dan CATEGORY_PROTECTED y no se tocan', async () => {
     for (const key of ['loan', 'other']) {
-      const r = await repo().remove(await idOf('expense', key));
+      const r = await repo().remove(await idOf(key));
       expect(r.ok).toBe(false);
       if (!r.ok) expect(r.error.code).toBe('CATEGORY_PROTECTED');
     }
-    expect(await repo().list()).toHaveLength(6);
+    expect(await repo().list()).toHaveLength(3);
   });
 
   it('un id inexistente da CATEGORY_NOT_FOUND', async () => {
@@ -143,13 +150,9 @@ describe('remove', () => {
     const c = await repo().create(food);
     if (!c.ok) throw new Error('setup');
     await addMovement('m1', c.value.id);
-    await db.execute(
-      "CREATE TRIGGER bloquear_borrado BEFORE DELETE ON categories BEGIN SELECT RAISE(ABORT, 'borrado bloqueado'); END",
-    );
+    await db.execute("CREATE TRIGGER bloquear_borrado BEFORE DELETE ON categories BEGIN SELECT RAISE(ABORT, 'borrado bloqueado'); END");
     await expect(repo().remove(c.value.id)).rejects.toThrow('borrado bloqueado');
     expect(await db.getOptional('SELECT id FROM categories WHERE id = ?', [c.value.id])).not.toBeNull();
-    expect(await db.getOptional<{ category_id: string }>("SELECT category_id FROM movements WHERE id = 'm1'")).toEqual({
-      category_id: c.value.id,
-    });
+    expect(await db.getOptional<{ category_id: string }>("SELECT category_id FROM movements WHERE id = 'm1'")).toEqual({ category_id: c.value.id });
   });
 });

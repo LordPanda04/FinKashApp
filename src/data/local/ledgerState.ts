@@ -71,7 +71,7 @@ export function categoryFromRow(row: Row): Category {
   const r = new RowReader('categories', row);
   const systemKey =
     r.textOrNull('system_key') === null ? null : r.oneOf<'other' | 'loan'>('system_key', ['other', 'loan']);
-  return { id: r.text('id'), kind: r.oneOf<Category['kind']>('kind', ['expense', 'income']), systemKey };
+  return { id: r.text('id'), systemKey };
 }
 
 export function debtFromRow(row: Row): Debt {
@@ -110,7 +110,7 @@ export async function loadLedgerState(reader: SqlReader): Promise<LedgerState> {
       `SELECT a.id, a.kind, a.wallet_id, a.currency, c.credit_limit_minor
          FROM accounts a LEFT JOIN credit_cards c ON c.id = a.id ORDER BY a.id`,
     ),
-    reader.getAll<Row>('SELECT id, kind, system_key FROM categories ORDER BY sort_order, id'),
+    reader.getAll<Row>('SELECT id, system_key FROM categories ORDER BY sort_order, id'),
     reader.getAll<Row>('SELECT * FROM debts ORDER BY id'),
     reader.getAll<Row>('SELECT * FROM movements ORDER BY occurred_on, created_at, id'),
   ]);

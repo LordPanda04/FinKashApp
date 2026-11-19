@@ -13,7 +13,6 @@ function recordFromRow(row: Row): CategoryRecord {
   const systemKey = r.textOrNull('system_key') === null ? null : r.oneOf<'other' | 'loan'>('system_key', ['other', 'loan']);
   return {
     id: r.text('id'),
-    kind: r.oneOf<'expense' | 'income'>('kind', ['expense', 'income']),
     systemKey,
     name: r.text('name'),
     color: r.text('color'),
@@ -22,22 +21,22 @@ function recordFromRow(row: Row): CategoryRecord {
   };
 }
 
-const COLUMNS = 'id, kind, system_key, name, color, icon, sort_order';
+const COLUMNS = 'id, system_key, name, color, icon, sort_order';
 
 async function findById(reader: SqlReader, id: string): Promise<CategoryRecord | null> {
   const row = await reader.getOptional<Row>(`SELECT ${COLUMNS} FROM categories WHERE id = ?`, [id]);
   return row ? recordFromRow(row) : null;
 }
 
-async function nameTaken(reader: SqlReader, kind: string, name: string, exceptId?: string): Promise<boolean> {
-  const rows = await reader.getAll<Row>('SELECT id, name FROM categories WHERE kind = ?', [kind]);
+async function nameTaken(reader: SqlReader, name: string, exceptId?: string): Promise<boolean> {
+  const rows = await reader.getAll<Row>('SELECT id, name FROM categories');
   return rows.some((r) => r.id !== exceptId && nameKey(String(r.name)) === nameKey(name));
 }
 
 const duplicate = (name: string) => err<never>('CATEGORY_DUPLICATE', `Ya existe una categoría llamada "${name}".`);
 const notFound = () => err<never>('CATEGORY_NOT_FOUND', 'La categoría no existe.');
 
-const updateInput = categoryInput.omit({ kind: true }).partial();
+const updateInput = categoryInput.partial();
 
 export function createCategoryRepository(db: LocalDb, depsIn?: RepoDeps) {
   const { newId, now } = resolveDeps(depsIn);
@@ -53,14 +52,14 @@ export function createCategoryRepository(db: LocalDb, depsIn?: RepoDeps) {
       if (!parsed.ok) return parsed;
       const value = parsed.value;
       return db.writeTransaction(async (tx) => {
-        if (await nameTaken(tx, value.kind, value.name)) return duplicate(value.name);
-        const max = await tx.getOptional<{ m: number | null }>('SELECT MAX(sort_order) AS m FROM categories WHERE kind = ?', [value.kind]);
+        if (await nameTaken(tx, value.name)) return duplicate(value.name);
+        const max = await tx.getOptional<{ m: number | null }>('SELECT MAX(sort_order) AS m FROM categories');
         const id = newId();
         const stamp = now();
         await tx.execute(
-          `INSERT INTO categories (id, user_id, kind, name, color, icon, system_key, sort_order, created_at, updated_at)
-           VALUES (?, NULL, ?, ?, ?, ?, NULL, ?, ?, ?)`,
-          [id, value.kind, value.name, value.color, value.icon, (max?.m ?? -1) + 1, stamp, stamp],
+          `INSERT INTO categories (id, user_id, name, color, icon, system_key, sort_order, created_at, updated_at)
+           VALUES (?, NULL, ?, ?, ?, NULL, ?, ?, ?)`,
+          [id, value.name, value.color, value.icon, (max?.m ?? -1) + 1, stamp, stamp],
         );
         return ok((await findById(tx, id))!);
       });
@@ -78,7 +77,7 @@ export function createCategoryRepository(db: LocalDb, depsIn?: RepoDeps) {
           if (current.systemKey !== null) {
             return err<never>('CATEGORY_PROTECTED', 'Las categorías "Otros" y "Préstamo" no se pueden renombrar.');
           }
-          if (await nameTaken(tx, current.kind, value.name, id)) return duplicate(value.name);
+          if (await nameTaken(tx, value.name, id)) return duplicate(value.name);
         }
         await tx.execute('UPDATE categories SET name = ?, color = ?, icon = ?, updated_at = ? WHERE id = ?', [
           value.name ?? current.name,
@@ -91,7 +90,7 @@ export function createCategoryRepository(db: LocalDb, depsIn?: RepoDeps) {
       });
     },
 
-    /** Reasigna los movimientos a "Otros" del mismo tipo y borra la categoría, todo en una transacción. */
+    /** Reasigna los movimientos a "Otros" y borra la categoría, todo en una transacción. */
     async remove(id: string): Promise<Result<{ reassigned: number }>> {
       return db.writeTransaction(async (tx) => {
         const plan = planCategoryDeletion(id, await loadLedgerState(tx));

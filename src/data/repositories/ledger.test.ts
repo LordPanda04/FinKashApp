@@ -27,7 +27,7 @@ describe('ledger repository', () => {
     if (!w.ok) throw new Error('setup');
     const state = await createLedgerRepository(db).state();
     expect(state.accounts).toHaveLength(1);
-    expect(state.categories).toHaveLength(6);
+    expect(state.categories).toHaveLength(3);
     expect(state.debts).toEqual([]);
     expect(state.movements).toHaveLength(1);
     expect(state.movements[0]).toMatchObject({ type: 'opening', amountMinor: 50000 });

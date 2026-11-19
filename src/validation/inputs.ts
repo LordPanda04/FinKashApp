@@ -27,7 +27,6 @@ const name = (label: string, max: number) =>
     .max(max, `${label} puede tener hasta ${max} caracteres.`);
 
 export const categoryInput = z.object({
-  kind: z.enum(['expense', 'income'], { error: 'El tipo debe ser gasto o ingreso.' }),
   name: name('El nombre', 40),
   color: hexColor,
   icon,

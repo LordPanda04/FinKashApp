@@ -164,7 +164,7 @@ Tamaños: 24 px en la barra (28 px el "+"), 20 px en círculos, 18 px en accione
 
 ### 6.5 Categorías
 1. Título "Categorías" + botón "+" (agregar).
-2. Una sola lista agrupada con categorías de gasto e ingreso mezcladas; cada fila muestra ícono, nombre, tipo ("Gasto" en rojo / "Ingreso" en verde) y botones **editar** y **eliminar**.
+2. Una sola lista agrupada de categorías; cada fila muestra ícono, nombre y botones **editar** y **eliminar**. (Stitch mostraba además el tipo "Gasto"/"Ingreso" por fila: **reemplazado el 2026-11-19**, las categorías no tienen tipo; `FINANCIAL_RULES.md` §11.)
 
 ### 6.6 Formatos observados
 - Montos: `S/ 1,840.00` (coma para miles, punto para decimales, espacio después de `S/`); con signo: `- S/ 24.50`, `+ S/ 500.00`. Dólares con el mismo formato: `$ 1,840.00`.
@@ -304,5 +304,6 @@ Boceto en texto:
 
 ### 10.5 Categorías
 - **[Usuario]** Crear, editar y eliminar categorías. "Otros" es la categoría base protegida.
+- **[Usuario]** (2026-11-19) Las categorías **no muestran ni tienen tipo** (gasto/ingreso): hay una sola "Otros", una sola "Préstamo", etc. El tipo se elige al registrar el movimiento.
 - **[Propuesta]** En las filas de las categorías de sistema ("Otros" y "Préstamo") no aparece el botón eliminar.
 - **[Propuesta]** Al eliminar otra categoría se pide confirmación indicando cuántos movimientos pasarán a "Otros".

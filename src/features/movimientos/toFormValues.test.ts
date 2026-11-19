@@ -56,8 +56,8 @@ describe('ida y vuelta con buildMovementDraft', () => {
     { id: 'w2', name: 'Plin', walletType: 'digital' as const, icon: 'smartphone', color: '#00D1A0', isHidden: false, includeInGeneral: true, sortOrder: 1 },
   ];
   const categories: CategoryRecord[] = [
-    { id: 'food', kind: 'expense', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 1 },
-    { id: 'salary', kind: 'income', name: 'Sueldo', color: '#1C9C4D', icon: 'work', systemKey: null, sortOrder: 2 },
+    { id: 'food', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 1 },
+    { id: 'salary', name: 'Sueldo', color: '#1C9C4D', icon: 'work', systemKey: null, sortOrder: 2 },
   ];
 
   it.each([

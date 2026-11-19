@@ -16,9 +16,9 @@ const accounts: Account[] = [
   { id: 'bcpCard', kind: 'credit_card', walletId: null, currency: 'PEN', creditLimitMinor: 200000 },
 ];
 const categories: Category[] = [
-  { id: 'food', kind: 'expense', systemKey: null },
-  { id: 'services', kind: 'expense', systemKey: null },
-  { id: 'salary', kind: 'income', systemKey: null },
+  { id: 'food', systemKey: null },
+  { id: 'services', systemKey: null },
+  { id: 'salary', systemKey: null },
 ];
 
 const NOV: DateRange = { start: '2026-11-01', end: '2026-11-30' };

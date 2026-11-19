@@ -14,8 +14,8 @@ const accounts: Account[] = [
 ];
 const cards: CardRecord[] = [{ accountId: 'bcp', name: 'Tarjeta BCP', issuer: null, icon: 'credit_card', color: '#003DA5', creditLimitMinor: 200000, closingDay: null, dueDay: null, isHidden: false }];
 const categories: CategoryRecord[] = [
-  { id: 'food', kind: 'expense', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 1 },
-  { id: 'salary', kind: 'income', name: 'Sueldo', color: '#1C9C4D', icon: 'work', systemKey: null, sortOrder: 2 },
+  { id: 'food', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 1 },
+  { id: 'salary', name: 'Sueldo', color: '#1C9C4D', icon: 'work', systemKey: null, sortOrder: 2 },
 ];
 const ctx = { categories, accounts, wallets, cards };
 

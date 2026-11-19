@@ -8,10 +8,9 @@ const accounts: Account[] = [
   { id: 'bcpCard', kind: 'credit_card', walletId: null, currency: 'PEN', creditLimitMinor: 200000 },
 ];
 const categories: Category[] = [
-  { id: 'food', kind: 'expense', systemKey: null },
-  { id: 'salary', kind: 'income', systemKey: null },
-  { id: 'loanExp', kind: 'expense', systemKey: 'loan' },
-  { id: 'loanInc', kind: 'income', systemKey: 'loan' },
+  { id: 'food', systemKey: null },
+  { id: 'salary', systemKey: null },
+  { id: 'loan', systemKey: 'loan' },
 ];
 const debts: Debt[] = [
   {
@@ -101,7 +100,7 @@ describe('validateMovement — casos válidos', () => {
   it('préstamo con deuda de la misma moneda', () => {
     expect(
       codeOf(
-        mv({ type: 'expense', sourceAccountId: 'yapePen', categoryId: 'loanExp', debtId: 'carlos' }),
+        mv({ type: 'expense', sourceAccountId: 'yapePen', categoryId: 'loan', debtId: 'carlos' }),
       ),
     ).toBeNull();
   });
@@ -257,10 +256,9 @@ describe('validateMovement — categoría', () => {
     ).toBe('CATEGORY_NOT_ALLOWED');
   });
 
-  it('gasto con categoría de ingreso', () => {
-    expect(
-      codeOf(mv({ type: 'expense', sourceAccountId: 'yapePen', categoryId: 'salary' })),
-    ).toBe('CATEGORY_KIND_MISMATCH');
+  it('las categorías no tienen tipo: la misma categoría sirve para un gasto y para un ingreso', () => {
+    expect(codeOf(mv({ type: 'expense', sourceAccountId: 'yapePen', categoryId: 'salary' }))).toBeNull();
+    expect(codeOf(mv({ type: 'income', destAccountId: 'yapePen', categoryId: 'food' }))).toBeNull();
   });
 
   it('categoría inexistente', () => {
@@ -273,7 +271,7 @@ describe('validateMovement — categoría', () => {
 describe('validateMovement — deuda', () => {
   it('categoría Préstamo sin deuda', () => {
     expect(
-      codeOf(mv({ type: 'expense', sourceAccountId: 'yapePen', categoryId: 'loanExp' })),
+      codeOf(mv({ type: 'expense', sourceAccountId: 'yapePen', categoryId: 'loan' })),
     ).toBe('DEBT_REQUIRED');
   });
 
@@ -288,7 +286,7 @@ describe('validateMovement — deuda', () => {
   it('deuda en otra moneda que el movimiento', () => {
     expect(
       codeOf(
-        mv({ type: 'expense', sourceAccountId: 'yapePen', categoryId: 'loanExp', debtId: 'debtUsd' }),
+        mv({ type: 'expense', sourceAccountId: 'yapePen', categoryId: 'loan', debtId: 'debtUsd' }),
       ),
     ).toBe('DEBT_CURRENCY_MISMATCH');
   });
@@ -296,7 +294,7 @@ describe('validateMovement — deuda', () => {
   it('deuda inexistente', () => {
     expect(
       codeOf(
-        mv({ type: 'expense', sourceAccountId: 'yapePen', categoryId: 'loanExp', debtId: 'nope' }),
+        mv({ type: 'expense', sourceAccountId: 'yapePen', categoryId: 'loan', debtId: 'nope' }),
       ),
     ).toBe('DEBT_NOT_FOUND');
   });

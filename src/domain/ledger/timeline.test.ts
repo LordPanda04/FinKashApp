@@ -8,10 +8,9 @@ const accounts: Account[] = [
   { id: 'bcpCard', kind: 'credit_card', walletId: null, currency: 'PEN', creditLimitMinor: 200000 },
 ];
 const categories: Category[] = [
-  { id: 'food', kind: 'expense', systemKey: null },
-  { id: 'salary', kind: 'income', systemKey: null },
-  { id: 'loanInc', kind: 'income', systemKey: 'loan' },
-  { id: 'loanExp', kind: 'expense', systemKey: 'loan' },
+  { id: 'food', systemKey: null },
+  { id: 'salary', systemKey: null },
+  { id: 'loan', systemKey: 'loan' },
 ];
 const carlos: Debt = {
   id: 'carlos',
@@ -184,7 +183,7 @@ describe('checkChange — deudas', () => {
       occurredOn: '2026-11-10',
       amountMinor: 20000,
       destAccountId: 'yapePen',
-      categoryId: 'loanInc',
+      categoryId: 'loan',
       debtId: 'carlos',
     });
     const r = checkChange({ kind: 'create', movement: devolucion }, state(), TODAY);
@@ -200,7 +199,7 @@ describe('checkChange — deudas', () => {
       occurredOn: '2026-11-10',
       amountMinor: 15000,
       destAccountId: 'yapePen',
-      categoryId: 'loanInc',
+      categoryId: 'loan',
       debtId: 'carlos',
     });
     expect(checkChange({ kind: 'create', movement: devolucion }, state(), TODAY).ok).toBe(true);

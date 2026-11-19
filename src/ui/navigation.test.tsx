@@ -149,7 +149,7 @@ describe('pantallas', () => {
   it('Categorías muestra su título y sus datos', async () => {
     await renderRouter(routes, { initialUrl: '/categorias' });
     expect(screen.getByRole('header', { name: 'Categorías' })).toBeOnTheScreen();
-    expect(await screen.findAllByText('Otros')).toHaveLength(2);
+    expect(await screen.findByText('Otros')).toBeOnTheScreen();
   });
 
   it('Inicio: saludo sin título de pantalla', async () => {

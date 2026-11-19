@@ -13,10 +13,10 @@ const wallets: WalletRecord[] = [
   { id: 'w1', name: 'Yape', walletType: 'digital', icon: 'smartphone', color: '#742384', isHidden: false, includeInGeneral: true, sortOrder: 0 },
 ];
 const accounts: Account[] = [{ id: 'yapePen', kind: 'wallet', walletId: 'w1', currency: 'PEN', creditLimitMinor: null }];
-const comida: CategoryRecord = { id: 'comida', kind: 'expense', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 50 };
+const comida: CategoryRecord = { id: 'comida', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 50 };
 
 const seed = () => [
-  movementOf({ id: 'i1', type: 'income', occurredOn: '2026-11-10', categoryId: 'income-0', sourceAccountId: null, destAccountId: 'yapePen', amountMinor: 10000 }),
+  movementOf({ id: 'i1', type: 'income', occurredOn: '2026-11-10', categoryId: 'other', sourceAccountId: null, destAccountId: 'yapePen', amountMinor: 10000 }),
   movementOf({ id: 'm1', type: 'expense', occurredOn: '2026-11-12', description: 'Menú', categoryId: 'comida', sourceAccountId: 'yapePen', amountMinor: 2450 }),
   movementOf({ id: 'o1', type: 'opening', occurredOn: '2026-11-01', categoryId: null, sourceAccountId: null, destAccountId: 'yapePen', amountMinor: 50000 }),
 ];

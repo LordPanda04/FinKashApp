@@ -1,19 +1,8 @@
 import type { CategoryRecord } from '@/data/types';
-import { colors } from '@/ui/tokens';
 
-export function describeCategory(c: CategoryRecord): {
-  title: string;
-  kindLabel: 'Gasto' | 'Ingreso';
-  kindColor: string;
-  canDelete: boolean;
-} {
-  return {
-    title: c.name,
-    kindLabel: c.kind === 'expense' ? 'Gasto' : 'Ingreso',
-    kindColor: c.kind === 'expense' ? colors.danger : colors.primary,
-    // Las categorías de sistema ("Otros", "Préstamo") no se eliminan.
-    canDelete: c.systemKey === null,
-  };
+export function describeCategory(c: CategoryRecord): { title: string; canDelete: boolean } {
+  // Las categorías no tienen tipo (gasto/ingreso). Las de sistema ("Otros", "Préstamo") no se eliminan.
+  return { title: c.name, canDelete: c.systemKey === null };
 }
 
 /** Texto de confirmación al eliminar: cuántos movimientos pasan a "Otros". */

@@ -40,7 +40,7 @@ export const SYNCED_TABLES: TableSpec[] = [
   {
     name: 'categories',
     columns: {
-      user_id: 'text', kind: 'text', name: 'text', color: 'text', icon: 'text',
+      user_id: 'text', name: 'text', color: 'text', icon: 'text',
       system_key: 'text', sort_order: 'integer', ...AUDIT,
     },
   },

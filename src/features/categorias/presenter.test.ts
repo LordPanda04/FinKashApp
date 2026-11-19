@@ -1,15 +1,11 @@
 import type { CategoryRecord } from '@/data/types';
 import { deleteMessage, describeCategory } from './presenter';
 
-const comida: CategoryRecord = { id: 'c1', kind: 'expense', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 1 };
+const comida: CategoryRecord = { id: 'c1', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 1 };
 
 describe('describeCategory', () => {
-  it('gasto de usuario: etiqueta roja y se puede eliminar', () => {
-    expect(describeCategory(comida)).toEqual({ title: 'Comida', kindLabel: 'Gasto', kindColor: '#E5484D', canDelete: true });
-  });
-
-  it('ingreso: etiqueta verde', () => {
-    expect(describeCategory({ ...comida, kind: 'income', name: 'Sueldo' })).toMatchObject({ kindLabel: 'Ingreso', kindColor: '#1C9C4D' });
+  it('categoría de usuario: se puede eliminar y no expone ningún tipo', () => {
+    expect(describeCategory(comida)).toEqual({ title: 'Comida', canDelete: true });
   });
 
   it.each(['other', 'loan'] as const)('la categoría de sistema %s no se puede eliminar', (systemKey) => {

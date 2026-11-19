@@ -6,7 +6,7 @@ function fieldsOf(r: ReturnType<typeof parseOrError>): string[] {
   return Object.keys((r.error.details as { fields: Record<string, string> }).fields);
 }
 
-const goodCategory = { kind: 'expense', name: 'Comida', color: '#1A2B3C', icon: 'restaurant' };
+const goodCategory = { name: 'Comida', color: '#1A2B3C', icon: 'restaurant' };
 
 describe('categoryInput', () => {
   it('acepta una categoría válida y recorta espacios del nombre', () => {
@@ -25,9 +25,13 @@ describe('categoryInput', () => {
     expect(fieldsOf(parseOrError(categoryInput, { ...goodCategory, color }))).toEqual(['color']);
   });
 
-  it('rechaza un tipo desconocido y un ícono vacío', () => {
-    expect(fieldsOf(parseOrError(categoryInput, { ...goodCategory, kind: 'transfer' }))).toEqual(['kind']);
+  it('rechaza un ícono vacío', () => {
     expect(fieldsOf(parseOrError(categoryInput, { ...goodCategory, icon: '' }))).toEqual(['icon']);
+  });
+
+  it('ignora un tipo sobrante: las categorías no tienen tipo', () => {
+    const r = parseOrError(categoryInput, { ...goodCategory, kind: 'expense' });
+    expect(r).toEqual({ ok: true, value: goodCategory });
   });
 
   it('el mensaje de error está en español', () => {
@@ -121,8 +125,8 @@ describe('thresholdInput', () => {
 
 describe('parseOrError', () => {
   it('informa todos los campos inválidos a la vez', () => {
-    const fields = fieldsOf(parseOrError(categoryInput, { kind: 'x', name: '', color: 'red', icon: '' }));
-    expect(fields.sort()).toEqual(['color', 'icon', 'kind', 'name']);
+    const fields = fieldsOf(parseOrError(categoryInput, { name: '', color: 'red', icon: '' }));
+    expect(fields.sort()).toEqual(['color', 'icon', 'name']);
   });
 
   it('rechaza entradas que no son objetos', () => {

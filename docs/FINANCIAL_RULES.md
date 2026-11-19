@@ -110,12 +110,13 @@ Convenciones:
 ## 11. Categorías, fechas, umbrales y acceso
 - **[Usuario]** Existe la categoría de sistema protegida **"Otros"**, que no se puede eliminar.
 - **[Usuario]** Al eliminar una categoría personalizada, todos sus movimientos pasan automáticamente a "Otros".
-- **[Propuesta]** Categorías de sistema, cada una en versión de gasto y de ingreso:
+- **[Usuario]** (2026-11-19) **Las categorías no tienen tipo.** Existe una sola categoría "Otros", una sola "Préstamo", etc. Que un movimiento sea gasto o ingreso lo define el movimiento al registrarlo, no la categoría; el usuario solo ve la categoría, nunca "gasto" o "ingreso" en ella. Cualquier categoría se puede usar en un gasto o en un ingreso.
+- **[Propuesta]** Categorías de sistema (una sola de cada una):
   - **"Otros"**: protegida.
   - **"Préstamo"**: también protegida, porque la usan las deudas (§7).
 
   Se puede cambiar su color e ícono, pero no su nombre ni eliminarlas.
-- **[Propuesta]** "Devolución / Reembolso" viene creada por defecto en sus dos versiones, pero sí se puede eliminar.
+- **[Propuesta]** "Devolución / Reembolso" viene creada por defecto, pero sí se puede eliminar.
 - **[Propuesta]** Las transferencias, pagos de tarjeta, aperturas y arreglos no llevan categoría.
 - **[Usuario]** Fechas: solo día/mes/año, zona horaria `America/Lima`, sin hora. En el formulario, el switch **"¿Es de hoy?"** viene activado; al desactivarlo aparece un calendario.
 - **[Usuario]** Umbral mínimo: opcional, por moneda, global o por billetera. Es solo una alerta visual cuando el saldo baja del límite; **nunca bloquea gastos**.

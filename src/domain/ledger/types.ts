@@ -38,9 +38,9 @@ export interface Movement {
   declaredBalanceMinor: number | null;
 }
 
+/** Las categorías no tienen tipo: gasto o ingreso lo define el movimiento (`FINANCIAL_RULES.md` §11). */
 export interface Category {
   id: string;
-  kind: 'expense' | 'income';
   /** `other` = "Otros", `loan` = "Préstamo"; null para categorías del usuario. */
   systemKey: 'other' | 'loan' | null;
 }

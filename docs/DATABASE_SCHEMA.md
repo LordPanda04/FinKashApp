@@ -84,16 +84,15 @@ Los movimientos con categoría "Préstamo" se vinculan a una deuda (`movements.d
 |---|---|---|
 | id | uuid PK | |
 | user_id | uuid | |
-| kind | text | `expense` \| `income` |
-| name | text | |
+| name | text | único por usuario, sin distinguir mayúsculas |
 | color | text | un solo hex; el fondo del ícono se deriva al 10 % |
 | icon | text | nombre de Material Symbols |
 | system_key | text null | `other` ("Otros") \| `loan` ("Préstamo"); null para el resto |
 | sort_order | int | |
 
-Restricciones: único `(user_id, kind, system_key)` cuando `system_key` no es null. Las categorías con `system_key` no se eliminan ni se renombran.
-Datos semilla por usuario: "Otros", "Préstamo" y "Devolución / Reembolso", cada una en versión de gasto y de ingreso.
-Eliminar una categoría personalizada: en una sola transacción, sus movimientos pasan a "Otros" del mismo tipo y luego se borra la categoría.
+Las categorías **no tienen tipo** (gasto/ingreso): el tipo lo da el movimiento (`movements.type`). Restricciones: único `(user_id, system_key)` cuando `system_key` no es null. Las categorías con `system_key` no se eliminan ni se renombran.
+Datos semilla por usuario: "Otros", "Préstamo" y "Devolución / Reembolso" (una sola de cada una).
+Eliminar una categoría personalizada: en una sola transacción, sus movimientos pasan a "Otros" y luego se borra la categoría.
 
 ### movements
 | columna | tipo | notas |
@@ -103,7 +102,7 @@ Eliminar una categoría personalizada: en una sola transacción, sus movimientos
 | type | text | `expense` \| `income` \| `transfer` \| `card_payment` \| `opening` \| `adjustment` |
 | occurred_on | date | sin hora |
 | description | text null | |
-| category_id | uuid null FK → categories | obligatoria solo en `expense` / `income` |
+| category_id | uuid null FK → categories | obligatoria solo en `expense` / `income`; cualquier categoría sirve para ambos tipos |
 | source_account_id | uuid null FK → accounts | |
 | dest_account_id | uuid null FK → accounts | |
 | amount_minor | bigint | > 0; un solo monto porque no hay conversión |

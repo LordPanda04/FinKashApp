@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
 import { useRepositories } from '@/data/RepositoriesContext';
 import type { CategoryRecord } from '@/data/types';
 import { AppText } from '@/ui/AppText';
@@ -10,12 +9,11 @@ import { CATEGORY_COLORS, CATEGORY_ICONS } from '@/ui/palette';
 import { PrimaryButton } from '@/ui/PrimaryButton';
 import { SwatchPicker } from '@/ui/SwatchPicker';
 import { TextField } from '@/ui/TextField';
-import { colors, radii } from '@/ui/tokens';
+import { colors } from '@/ui/tokens';
 
 /** Hoja para crear (`category` null) o editar una categoría. Se monta solo al abrirla, así su estado siempre parte limpio. */
 export function CategoryForm({ category, onClose }: { category: CategoryRecord | null; onClose: () => void }) {
   const { categories } = useRepositories();
-  const [kind, setKind] = useState<'expense' | 'income'>(category?.kind ?? 'expense');
   const [name, setName] = useState(category?.name ?? '');
   const [color, setColor] = useState(category?.color ?? CATEGORY_COLORS[0]!);
   const [icon, setIcon] = useState<IconName>((category?.icon as IconName | undefined) ?? 'category');
@@ -30,7 +28,7 @@ export function CategoryForm({ category, onClose }: { category: CategoryRecord |
     try {
       const result = category
         ? await categories.update(category.id, { name, color, icon })
-        : await categories.create({ kind, name, color, icon });
+        : await categories.create({ name, color, icon });
       if (!result.ok) {
         setError(result.error.message);
         return;
@@ -44,34 +42,6 @@ export function CategoryForm({ category, onClose }: { category: CategoryRecord |
 
   return (
     <BottomSheet visible title={category ? 'Editar categoría' : 'Nueva categoría'} onClose={onClose}>
-      {category ? null : (
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          {(['expense', 'income'] as const).map((k) => {
-            const selected = k === kind;
-            return (
-              <Pressable
-                key={k}
-                accessibilityRole="radio"
-                accessibilityLabel={k === 'expense' ? 'Gasto' : 'Ingreso'}
-                accessibilityState={{ selected }}
-                onPress={() => setKind(k)}
-                style={{
-                  flex: 1,
-                  height: 44,
-                  borderRadius: radii.pill,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: selected ? colors.primary : colors.surface,
-                }}
-              >
-                <AppText variant="labelLg" color={selected ? colors.onPrimary : colors.onSurface}>
-                  {k === 'expense' ? 'Gasto' : 'Ingreso'}
-                </AppText>
-              </Pressable>
-            );
-          })}
-        </View>
-      )}
       <TextField label="Nombre" value={name} onChangeText={setName} error={error} />
       <AppText variant="labelMd" color={colors.onSurfaceMuted}>
         Color

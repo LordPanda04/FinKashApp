@@ -37,14 +37,14 @@ export function createFakeRepositories(
     changes,
     categories: {
       list: async () => [...categories].sort((a, b) => a.sortOrder - b.sortOrder),
-      create: async (input: { kind: 'expense' | 'income'; name: string; color: string; icon: string }) => {
+      create: async (input: { name: string; color: string; icon: string }) => {
         calls.create(input);
         const name = input.name.trim();
         if (!name) return err('INPUT_INVALID', 'El nombre es obligatorio.');
-        if (categories.some((c) => c.kind === input.kind && c.name.toLowerCase() === name.toLowerCase())) {
+        if (categories.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
           return err('CATEGORY_DUPLICATE', `Ya existe una categoría llamada "${name}".`);
         }
-        const record: CategoryRecord = { id: `c${nextId++}`, kind: input.kind, name, color: input.color, icon: input.icon, systemKey: null, sortOrder: nextId };
+        const record: CategoryRecord = { id: `c${nextId++}`, name, color: input.color, icon: input.icon, systemKey: null, sortOrder: nextId };
         categories = [...categories, record];
         changes.notify();
         return ok(record);
@@ -55,7 +55,7 @@ export function createFakeRepositories(
         if (!current) return err('CATEGORY_NOT_FOUND', 'La categoría no existe.');
         if (patch.name !== undefined && patch.name !== current.name) {
           if (current.systemKey) return err('CATEGORY_PROTECTED', 'Las categorías "Otros" y "Préstamo" no se pueden renombrar.');
-          if (categories.some((c) => c.id !== id && c.kind === current.kind && c.name.toLowerCase() === patch.name!.trim().toLowerCase())) {
+          if (categories.some((c) => c.id !== id && c.name.toLowerCase() === patch.name!.trim().toLowerCase())) {
             return err('CATEGORY_DUPLICATE', `Ya existe una categoría llamada "${patch.name.trim()}".`);
           }
         }
@@ -178,14 +178,11 @@ export function createFakeRepositories(
 }
 
 export function seededCategories(): CategoryRecord[] {
-  const base = [
-    { name: 'Otros', systemKey: 'other', color: '#6B7280', icon: 'category' },
-    { name: 'Préstamo', systemKey: 'loan', color: '#F59E0B', icon: 'handshake' },
-    { name: 'Devolución / Reembolso', systemKey: null, color: '#10B981', icon: 'savings' },
-  ] as const;
-  return (['expense', 'income'] as const).flatMap((kind, k) =>
-    base.map((b, i) => ({ id: `${kind}-${i}`, kind, systemKey: b.systemKey, name: b.name, color: b.color, icon: b.icon, sortOrder: k * 10 + i })),
-  ) as CategoryRecord[];
+  return [
+    { id: 'other', name: 'Otros', systemKey: 'other', color: '#6B7280', icon: 'category', sortOrder: 0 },
+    { id: 'loan', name: 'Préstamo', systemKey: 'loan', color: '#F59E0B', icon: 'handshake', sortOrder: 1 },
+    { id: 'refund', name: 'Devolución / Reembolso', systemKey: null, color: '#10B981', icon: 'savings', sortOrder: 2 },
+  ];
 }
 
 export function movementOf(partial: Partial<Movement> & { id: string }): Movement {

@@ -2,8 +2,8 @@ import type { LedgerState } from '@/domain/ledger/types';
 import { err, ok, type Result } from '@/lib/result';
 
 /**
- * Plan para eliminar una categoría de usuario: sus movimientos pasan a "Otros" del mismo tipo
- * (gasto o ingreso). Las categorías de sistema ("Otros", "Préstamo") no se pueden eliminar.
+ * Plan para eliminar una categoría de usuario: todos sus movimientos (gastos e ingresos) pasan a la
+ * única "Otros". Las categorías de sistema ("Otros", "Préstamo") no se pueden eliminar.
  */
 export function planCategoryDeletion(
   categoryId: string,
@@ -15,12 +15,9 @@ export function planCategoryDeletion(
     return err('CATEGORY_PROTECTED', 'Las categorías "Otros" y "Préstamo" no se pueden eliminar.');
   }
 
-  const other = state.categories.find((c) => c.systemKey === 'other' && c.kind === category.kind);
+  const other = state.categories.find((c) => c.systemKey === 'other');
   if (!other) {
-    return err(
-      'SYSTEM_CATEGORY_MISSING',
-      `No existe la categoría "Otros" de ${category.kind === 'expense' ? 'gasto' : 'ingreso'} para reasignar los movimientos.`,
-    );
+    return err('SYSTEM_CATEGORY_MISSING', 'No existe la categoría «Otros» para reasignar los movimientos.');
   }
 
   const movementIds = state.movements.filter((m) => m.categoryId === categoryId).map((m) => m.id);

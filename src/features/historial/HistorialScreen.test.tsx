@@ -17,8 +17,8 @@ const accounts: Account[] = [
   { id: 'yapePen', kind: 'wallet', walletId: 'w1', currency: 'PEN', creditLimitMinor: null },
   { id: 'plinPen', kind: 'wallet', walletId: 'w2', currency: 'PEN', creditLimitMinor: null },
 ];
-const comida: CategoryRecord = { id: 'comida', kind: 'expense', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 50 };
-const sueldo: CategoryRecord = { id: 'sueldo', kind: 'income', name: 'Sueldo', color: '#1C9C4D', icon: 'work', systemKey: null, sortOrder: 51 };
+const comida: CategoryRecord = { id: 'comida', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 50 };
+const sueldo: CategoryRecord = { id: 'sueldo', name: 'Sueldo', color: '#1C9C4D', icon: 'work', systemKey: null, sortOrder: 51 };
 
 const movements = [
   movementOf({ id: 'm1', type: 'expense', occurredOn: '2026-11-20', description: 'Menú', categoryId: 'comida', sourceAccountId: 'yapePen', amountMinor: 2450 }),
@@ -80,7 +80,7 @@ describe('HistorialScreen — lista', () => {
   it('el filtro de Categoría deja solo las categorías elegidas', async () => {
     await open();
     await fireEvent.press(screen.getByRole('button', { name: 'Categoría' }));
-    await fireEvent.press(await screen.findByRole('checkbox', { name: 'Comida · Gasto' }));
+    await fireEvent.press(await screen.findByRole('checkbox', { name: 'Comida' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Listo' }));
     expect(screen.getByText('Menú')).toBeOnTheScreen();
     expect(screen.queryByText('Pago')).toBeNull();
@@ -99,7 +99,7 @@ describe('HistorialScreen — lista', () => {
   it('sin resultados muestra el mensaje vacío', async () => {
     await open();
     await fireEvent.press(screen.getByRole('button', { name: 'Categoría' }));
-    await fireEvent.press(await screen.findByRole('checkbox', { name: 'Sueldo · Ingreso' }));
+    await fireEvent.press(await screen.findByRole('checkbox', { name: 'Sueldo' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Listo' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Fecha' }));
     await fireEvent.press(await screen.findByRole('radio', { name: 'Mes pasado' }));

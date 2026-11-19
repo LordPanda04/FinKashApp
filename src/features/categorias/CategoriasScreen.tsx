@@ -58,12 +58,9 @@ export function CategoriasScreen() {
                 title={d.title}
                 right={
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <AppText variant="labelMd" color={d.kindColor}>
-                      {d.kindLabel}
-                    </AppText>
-                    <RowAction icon="edit" label={`Editar ${d.title} (${d.kindLabel})`} onPress={() => setForm({ category })} />
+                    <RowAction icon="edit" label={`Editar ${d.title}`} onPress={() => setForm({ category })} />
                     {d.canDelete ? (
-                      <RowAction icon="delete" label={`Eliminar ${d.title} (${d.kindLabel})`} onPress={() => askDelete(category)} />
+                      <RowAction icon="delete" label={`Eliminar ${d.title}`} onPress={() => askDelete(category)} />
                     ) : null}
                   </View>
                 }

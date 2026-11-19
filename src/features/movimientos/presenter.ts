@@ -66,8 +66,9 @@ export function destOptions(options: AccountOption[], from: AccountOption | null
   return options.filter((o) => o.id !== from.id && o.currency === from.currency);
 }
 
-export function categoryOptions(categories: CategoryRecord[], kind: 'expense' | 'income'): CategoryRecord[] {
-  return categories.filter((c) => c.kind === kind).sort((a, b) => a.sortOrder - b.sortOrder);
+/** Todas las categorías, por orden: no tienen tipo, sirven igual para un gasto que para un ingreso. */
+export function categoryOptions(categories: CategoryRecord[]): CategoryRecord[] {
+  return [...categories].sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 /**

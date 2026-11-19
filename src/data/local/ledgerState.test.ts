@@ -19,7 +19,7 @@ async function insertBasics() {
     "INSERT INTO credit_cards (id, name, credit_limit_minor, is_hidden) VALUES ('bcp', 'Tarjeta BCP', 200000, 0)",
   );
   await db.execute(
-    "INSERT INTO categories (id, kind, name, color, icon, system_key, sort_order) VALUES ('food', 'expense', 'Comida', '#FF0000', 'restaurant', NULL, 0), ('loanExp', 'expense', 'Préstamo', '#00FF00', 'handshake', 'loan', 1)",
+    "INSERT INTO categories (id, name, color, icon, system_key, sort_order) VALUES ('food', 'Comida', '#FF0000', 'restaurant', NULL, 0), ('loan', 'Préstamo', '#00FF00', 'handshake', 'loan', 1)",
   );
   await db.execute(
     "INSERT INTO debts (id, direction, counterparty_name, counterparty_type, currency, initial_pending_minor, installment_amount_minor, next_due_on) VALUES ('d1', 'payable', 'Interbank', 'institution', 'PEN', 89000, 44500, '2026-11-25')",
@@ -38,8 +38,8 @@ describe('loadLedgerState', () => {
       { id: 'yapePen', kind: 'wallet', walletId: 'w1', currency: 'PEN', creditLimitMinor: null },
     ]);
     expect(state.categories).toEqual([
-      { id: 'food', kind: 'expense', systemKey: null },
-      { id: 'loanExp', kind: 'expense', systemKey: 'loan' },
+      { id: 'food', systemKey: null },
+      { id: 'loan', systemKey: 'loan' },
     ]);
     expect(state.debts).toEqual([
       {

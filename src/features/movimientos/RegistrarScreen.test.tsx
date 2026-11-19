@@ -22,8 +22,8 @@ const accounts: Account[] = [
   { id: 'bcp', kind: 'credit_card', walletId: null, currency: 'PEN', creditLimitMinor: 200000 },
 ];
 const card: CardRecord = { accountId: 'bcp', name: 'Tarjeta BCP', issuer: null, icon: 'credit_card', color: '#003DA5', creditLimitMinor: 200000, closingDay: null, dueDay: null, isHidden: false };
-const comida: CategoryRecord = { id: 'comida', kind: 'expense', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 50 };
-const sueldo: CategoryRecord = { id: 'sueldo', kind: 'income', name: 'Sueldo', color: '#1C9C4D', icon: 'work', systemKey: null, sortOrder: 51 };
+const comida: CategoryRecord = { id: 'comida', name: 'Comida', color: '#1C9C4D', icon: 'restaurant', systemKey: null, sortOrder: 50 };
+const sueldo: CategoryRecord = { id: 'sueldo', name: 'Sueldo', color: '#1C9C4D', icon: 'work', systemKey: null, sortOrder: 51 };
 const carlos: FakeDebt = {
   id: 'd1', direction: 'receivable', currency: 'PEN', initialPendingMinor: 0, installmentAmountMinor: null, nextDueOn: null,
   counterpartyName: 'Carlos', counterpartyType: 'person', dueOn: null, installmentsRemaining: null, notes: null, pendingMinor: 10000, status: 'pending',
@@ -138,6 +138,32 @@ describe('RegistrarScreen — gasto', () => {
   });
 });
 
+describe('RegistrarScreen — categorías sin tipo', () => {
+  it('ofrece las mismas categorías para un gasto y para un ingreso, sin mostrar el tipo', async () => {
+    await open();
+    await fireEvent.press(screen.getByRole('button', { name: 'Categoría' }));
+    for (const name of ['Otros', 'Préstamo', 'Devolución / Reembolso', 'Comida', 'Sueldo']) {
+      expect(await screen.findByRole('radio', { name })).toBeOnTheScreen();
+    }
+    await fireEvent.press(screen.getByRole('radio', { name: 'Comida' }));
+    await fireEvent.press(screen.getByRole('radio', { name: 'Ingreso' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Categoría' }));
+    expect(await screen.findByRole('radio', { name: 'Comida' })).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'Sueldo' })).toBeOnTheScreen();
+  });
+
+  it('la categoría elegida se conserva al cambiar de Gasto a Ingreso solo si es válida (siempre lo es)', async () => {
+    const { calls } = await open();
+    await choose('Categoría', 'Comida');
+    await choose('Billetera', 'Plin · S/');
+    await fireEvent.press(screen.getByRole('radio', { name: 'Ingreso' }));
+    await fireEvent.changeText(screen.getByLabelText('Monto'), '50');
+    await choose('Categoría', 'Comida');
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar movimiento' }));
+    await waitFor(() => expect(calls.createMovement).toHaveBeenCalledWith(expect.objectContaining({ type: 'income', categoryId: 'comida', destAccountId: 'plinPen' })));
+  });
+});
+
 describe('RegistrarScreen — fecha', () => {
   it('desactivar "¿Es de hoy?" muestra el calendario y la fecha elegida llega al movimiento', async () => {
     const { calls } = await open();
@@ -248,7 +274,7 @@ describe('RegistrarScreen — préstamo y deuda', () => {
     expect(screen.queryByRole('radio', { name: /Pedro/ })).toBeNull(); // deuda en USD: otra moneda
     await fireEvent.press(await screen.findByRole('radio', { name: 'Carlos · Me deben' }));
     await fireEvent.press(save());
-    await waitFor(() => expect(calls.createMovement).toHaveBeenCalledWith(expect.objectContaining({ categoryId: 'expense-1', debtId: 'd1', amountMinor: 15000 })));
+    await waitFor(() => expect(calls.createMovement).toHaveBeenCalledWith(expect.objectContaining({ categoryId: 'loan', debtId: 'd1', amountMinor: 15000 })));
   });
 
   it('"+ Nueva deuda" guarda con createWithNewDebt y no con create', async () => {

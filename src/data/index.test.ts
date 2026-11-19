@@ -33,7 +33,7 @@ describe('createRepositories', () => {
     });
     if (!wallet.ok) throw new Error('setup');
     const account = wallet.value.accounts[0]!;
-    const food = (await repos.categories.list()).find((c) => c.kind === 'expense' && c.systemKey === 'other')!;
+    const food = (await repos.categories.list()).find((c) => c.systemKey === 'other')!;
 
     const spent = await repos.movements.create({
       type: 'expense', occurredOn: '2026-11-20', description: 'menú', categoryId: food.id,
@@ -50,7 +50,7 @@ describe('createRepositories', () => {
   });
 
   describe('notificaciones de cambios', () => {
-    const food = { kind: 'expense', name: 'Comida', color: '#FF0000', icon: 'restaurant' } as const;
+    const food = { name: 'Comida', color: '#FF0000', icon: 'restaurant' };
 
     it('una escritura notifica una vez y una lectura no notifica', async () => {
       const repos = createRepositories(db, deps);
