@@ -1,4 +1,4 @@
-import { CURRENCY_SYMBOL, formatMoney, parseAmountInput } from './money';
+import { CURRENCY_SYMBOL, formatMoney, parseAmountInput, parseBalanceInput } from './money';
 
 describe('parseAmountInput', () => {
   it('convierte "1,840.50" a 184050 céntimos', () => {
@@ -73,5 +73,29 @@ describe('formatMoney', () => {
   it('lanza error con montos negativos o no enteros', () => {
     expect(() => formatMoney(-1, 'PEN')).toThrow();
     expect(() => formatMoney(1.5, 'PEN')).toThrow();
+  });
+});
+
+describe('parseBalanceInput (saldo real declarado, acepta 0)', () => {
+  it('acepta 0 y 0.00 (billetera vaciada)', () => {
+    expect(parseBalanceInput('0')).toEqual({ ok: true, value: 0 });
+    expect(parseBalanceInput('0.00')).toEqual({ ok: true, value: 0 });
+  });
+
+  it('convierte montos positivos igual que parseAmountInput', () => {
+    expect(parseBalanceInput('37550.5')).toEqual({ ok: true, value: 3755050 });
+    expect(parseBalanceInput('1,840.50')).toEqual({ ok: true, value: 184050 });
+    expect(parseBalanceInput(' 300 ')).toEqual({ ok: true, value: 30000 });
+  });
+
+  it.each(['-1', '-0', '24,50', 'abc', '', '1.005', '12.3.4', ',5'])('rechaza %j con AMOUNT_INVALID', (bad) => {
+    const r = parseBalanceInput(bad);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('AMOUNT_INVALID');
+  });
+
+  it('el mensaje permite el 0 (no dice "mayor a 0")', () => {
+    const r = parseBalanceInput('abc');
+    if (!r.ok) expect(r.error.message).not.toMatch(/mayor a 0/);
   });
 });
