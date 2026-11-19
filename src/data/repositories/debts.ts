@@ -5,6 +5,7 @@ import type { DebtRecord } from '@/data/types';
 import { debtPending, debtStatus } from '@/domain/debts/debts';
 import { err, ok, type Result } from '@/lib/result';
 import { debtInput, parseOrError, type DebtInput } from '@/validation/inputs';
+import { insertDebtRow } from './debtRows';
 import { resolveDeps, transact, type RepoDeps } from './shared';
 
 type Row = Record<string, unknown>;
@@ -80,16 +81,7 @@ export function createDebtRepository(db: LocalDb, depsIn?: RepoDeps) {
       return transact(db, async (tx) => {
         const id = newId();
         const stamp = now();
-        await tx.execute(
-          `INSERT INTO debts (id, user_id, direction, counterparty_name, counterparty_type, currency, initial_pending_minor,
-             due_on, installment_amount_minor, installments_remaining, next_due_on, notes, created_at, updated_at)
-           VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            id, v.direction, v.counterpartyName, v.counterpartyType, v.currency, v.initialPendingMinor,
-            v.dueOn ?? null, v.installmentAmountMinor ?? null, v.installmentsRemaining ?? null,
-            v.nextDueOn ?? null, v.notes ?? null, stamp, stamp,
-          ],
-        );
+        await insertDebtRow(tx, id, v, stamp);
         return (await findDebt(tx, id))!;
       });
     },

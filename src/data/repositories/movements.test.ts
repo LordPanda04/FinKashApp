@@ -3,6 +3,7 @@ import { loadLedgerState } from '@/data/local/ledgerState';
 import { viewTableSpecs } from '@/data/local/schema';
 import { seedDatabase } from '@/data/local/seed';
 import { createTestDb, type TestDb } from '@/data/local/testDb';
+import { debtPending } from '@/domain/debts/debts';
 import { accountBalance } from '@/domain/ledger/balances';
 import type { Violation } from '@/domain/ledger/timeline';
 import { createMovementRepository, type MovementDraft } from './movements';
@@ -254,5 +255,80 @@ describe('list', () => {
     expect((await movements().list({ from: '2026-11-05', to: '2026-11-15' })).map((m) => m.id)).toEqual([m3.value.id, m2.value.id]);
     expect((await movements().list({ accountId: b })).map((m) => m.id)).toEqual([m2.value.id]);
     expect((await movements().list({ categoryId: await categoryId('expense') })).map((m) => m.id)).toEqual([m3.value.id]);
+  });
+});
+
+async function loanCategory(kind: 'expense' | 'income'): Promise<string> {
+  return (await db.getOptional<{ id: string }>("SELECT id FROM categories WHERE kind = ? AND system_key = 'loan'", [kind]))!.id;
+}
+const carlos = { counterpartyName: 'Carlos', counterpartyType: 'person' } as const;
+
+describe('get', () => {
+  it('devuelve el movimiento o null', async () => {
+    const acc = await wallet(10000);
+    const r = await movements().create(await expense(acc, 1000, '2026-11-20'));
+    if (!r.ok) throw new Error('setup');
+    expect(await movements().get(r.value.id)).toEqual(r.value);
+    expect(await movements().get('nope')).toBeNull();
+  });
+});
+
+describe('createWithNewDebt', () => {
+  it('gasto Préstamo: crea la deuda "Me deben" y el movimiento vinculado, con pendiente 15000', async () => {
+    const acc = await wallet(50000);
+    const draft = { ...(await expense(acc, 15000, '2026-11-20')), categoryId: await loanCategory('expense') };
+    const r = await movements().createWithNewDebt(draft, carlos);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const debt = await db.getOptional<Record<string, unknown>>('SELECT * FROM debts WHERE id = ?', [r.value.debtId]);
+    expect(debt).toMatchObject({ direction: 'receivable', counterparty_name: 'Carlos', counterparty_type: 'person', currency: 'PEN', initial_pending_minor: 0 });
+    expect(r.value.movement.debtId).toBe(r.value.debtId);
+    const state = await loadLedgerState(db);
+    expect(debtPending(state.debts[0]!, state.movements)).toBe(15000);
+  });
+
+  it('ingreso Préstamo: crea una deuda "Debo"', async () => {
+    const acc = await wallet();
+    const draft = { ...(await income(acc, 20000, '2026-11-20')), categoryId: await loanCategory('income') };
+    const r = await movements().createWithNewDebt(draft, { counterpartyName: 'Interbank', counterpartyType: 'institution' });
+    expect(r.ok).toBe(true);
+    const debt = await db.getOptional<Record<string, unknown>>('SELECT * FROM debts');
+    expect(debt).toMatchObject({ direction: 'payable', counterparty_type: 'institution' });
+  });
+
+  it('un gasto sin fondos devuelve TIMELINE_VIOLATION y NO deja la deuda creada', async () => {
+    const acc = await wallet(1000);
+    const draft = { ...(await expense(acc, 15000, '2026-11-20')), categoryId: await loanCategory('expense') };
+    const r = await movements().createWithNewDebt(draft, carlos);
+    expect(violations(r)[0]).toMatchObject({ code: 'WALLET_NEGATIVE' });
+    expect(await db.getAll('SELECT id FROM debts')).toEqual([]);
+    expect((await movements().list()).filter((m) => m.type === 'expense')).toEqual([]);
+  });
+
+  it('con una categoría que no es Préstamo devuelve DEBT_NOT_ALLOWED y no deja deuda', async () => {
+    const acc = await wallet(50000);
+    const r = await movements().createWithNewDebt(await expense(acc, 1000, '2026-11-20'), carlos);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('DEBT_NOT_ALLOWED');
+    expect(await db.getAll('SELECT id FROM debts')).toEqual([]);
+  });
+
+  it('con nombre de contraparte vacío devuelve INPUT_INVALID y no escribe nada', async () => {
+    const acc = await wallet(50000);
+    const draft = { ...(await expense(acc, 1000, '2026-11-20')), categoryId: await loanCategory('expense') };
+    const r = await movements().createWithNewDebt(draft, { counterpartyName: '  ', counterpartyType: 'person' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('INPUT_INVALID');
+    expect(await db.getAll('SELECT id FROM debts')).toEqual([]);
+  });
+
+  it('con un tipo que no es gasto ni ingreso devuelve DEBT_NOT_ALLOWED', async () => {
+    const acc = await wallet(50000);
+    const other = await wallet(0);
+    const transfer = { type: 'transfer' as const, occurredOn: '2026-11-20', description: null, categoryId: null, sourceAccountId: acc, destAccountId: other, amountMinor: 100, currency: 'PEN' as const, debtId: null, declaredBalanceMinor: null };
+    const r = await movements().createWithNewDebt(transfer, carlos);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('DEBT_NOT_ALLOWED');
+    expect(await db.getAll('SELECT id FROM debts')).toEqual([]);
   });
 });

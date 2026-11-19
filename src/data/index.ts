@@ -39,7 +39,7 @@ export function createRepositories(db: LocalDb, deps?: RepoDeps) {
       changes,
     ),
     debts: notifying(createDebtRepository(db, deps), ['create', 'update'], changes),
-    movements: notifying(createMovementRepository(db, deps), ['create', 'update', 'remove', 'adjustWallet'], changes),
+    movements: notifying(createMovementRepository(db, deps), ['create', 'createWithNewDebt', 'update', 'remove', 'adjustWallet'], changes),
     periods: notifying(createPeriodRepository(db, deps), ['confirm', 'dismiss'], changes),
     settings: notifying(createSettingsRepository(db, deps), ['setDevice', 'setThreshold', 'clearThreshold'], changes),
     ledger: createLedgerRepository(db),

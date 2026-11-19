@@ -4,8 +4,10 @@ import { buildAdjustment } from '@/domain/ledger/builders';
 import { checkChange } from '@/domain/ledger/timeline';
 import type { Movement } from '@/domain/ledger/types';
 import { todayInLima, type IsoDate } from '@/lib/dates';
+import { insertDebtRow } from './debtRows';
 import { deleteMovementRow, insertMovementRow, updateMovementRow } from './movementRows';
 import { abort, resolveDeps, transact, unwrap, type RepoDeps } from './shared';
+import { debtInput, parseOrError, type DebtInput } from '@/validation/inputs';
 
 export type MovementDraft = Omit<Movement, 'id'>;
 
@@ -50,6 +52,41 @@ export function createMovementRepository(db: LocalDb, depsIn?: RepoDeps) {
       const sql = `SELECT * FROM movements ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
                    ORDER BY occurred_on DESC, created_at DESC, id DESC`;
       return (await db.getAll<Record<string, unknown>>(sql, params)).map(movementFromRow);
+    },
+
+    async get(id: string): Promise<Movement | null> {
+      const row = await db.getOptional<Record<string, unknown>>('SELECT * FROM movements WHERE id = ?', [id]);
+      return row ? movementFromRow(row) : null;
+    },
+
+    /**
+     * Gasto o ingreso "Préstamo" con una deuda nueva: crea la deuda y el movimiento en UNA transacción.
+     * Gasto → "Me deben" (receivable); ingreso → "Debo" (payable). Si el movimiento se rechaza no queda la deuda.
+     */
+    createWithNewDebt(
+      draft: MovementDraft,
+      debt: Omit<DebtInput, 'direction' | 'currency' | 'initialPendingMinor'>,
+    ) {
+      return transact(db, async (tx) => {
+        if (draft.type !== 'expense' && draft.type !== 'income') {
+          abort('DEBT_NOT_ALLOWED', 'Solo un gasto o un ingreso con categoría "Préstamo" puede crear una deuda.');
+        }
+        const parsed = unwrap(
+          parseOrError(debtInput, {
+            ...debt,
+            direction: draft.type === 'expense' ? 'receivable' : 'payable',
+            currency: draft.currency,
+            initialPendingMinor: 0,
+          }),
+        );
+        const stamp = now();
+        const debtId = newId();
+        await insertDebtRow(tx, debtId, parsed, stamp);
+        const movement: Movement = { id: newId(), ...draft, debtId };
+        unwrap(checkChange({ kind: 'create', movement }, await loadLedgerState(tx), today()));
+        await insertMovementRow(tx, movement, stamp);
+        return { movement, debtId };
+      });
     },
 
     create(draft: MovementDraft) {

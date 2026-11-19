@@ -31,7 +31,7 @@ export function createFakeRepositories(
   const cards: CardRecord[] = seed.cards ?? [];
   const debts: FakeDebt[] = seed.debts ?? [];
 
-  const calls = { create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn() };
+  const calls = { createMovement: jest.fn(), createWithNewDebt: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn() };
 
   const repos = {
     changes,
