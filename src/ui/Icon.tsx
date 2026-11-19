@@ -9,7 +9,12 @@ export type IconName =
   | 'home' | 'schedule' | 'add' | 'account_balance_wallet' | 'grid_view' | 'restaurant'
   | 'directions_car' | 'payments' | 'bolt' | 'movie' | 'favorite' | 'edit' | 'delete'
   | 'expand_more' | 'category' | 'chevron_right' | 'notes' | 'calendar_today' | 'smartphone'
-  | 'qr_code_2' | 'add_circle' | 'credit_card' | 'account_balance';
+  | 'qr_code_2' | 'add_circle' | 'credit_card' | 'account_balance'
+  | 'shopping_cart' | 'school' | 'medical_services' | 'pets' | 'flight' | 'sports_esports'
+  | 'local_cafe' | 'savings' | 'fitness_center' | 'work' | 'checkroom' | 'local_gas_station'
+  | 'child_care' | 'card_giftcard' | 'wifi'
+  | 'visibility' | 'visibility_off' | 'swap_horiz' | 'tune' | 'handshake' | 'arrow_back'
+  | 'check' | 'close' | 'expand_less' | 'person';
 
 export function Icon({
   name,
