@@ -27,3 +27,8 @@
 - **Plan — Tarea 9: reportes de Inicio** (`600aa66`).
 - **Plan — Tarea 10: periodos mensuales** (`845295e`).
 - **Plan — Tarea 11: eliminación de categorías.** Con esto queda completo el núcleo de dominio (Fase 4): 168 pruebas, typecheck y lint en verde; `src/domain/` sin dependencias de React Native, Expo, PowerSync ni Supabase. Los puntos de atención 1–5 del plan tienen prueba.
+- **Fase 5 — Base local PowerSync y repositorios** (plan `2026-11-19-fase5-base-local-y-repositorios.md`, 10 tareas, un commit local por tarea):
+  - T1 dependencias y arnés con SQLite real (`1c3078c`), T2 esquema cliente (`8d5775e`), T3 semilla y lectura del libro (`59c44d9`), T4 validación Zod, T5 categorías, T6 billeteras y tarjetas, T7 deudas, T8 movimientos con `checkChange`, T9 periodos/umbrales/ajustes, T10 arranque con base local (`da7df62`).
+  - 320 pruebas en verde, typecheck y lint limpios, `src/domain/` sin dependencias de `src/data` ni de React Native/Expo/PowerSync/Supabase.
+  - Development build recompilado con `op-sqlite` (BUILD SUCCESSFUL).
+  - **No verificado todavía:** la pantalla provisional con la base real en el emulador (la verificación visual quedó a cargo del usuario).
