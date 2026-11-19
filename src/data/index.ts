@@ -35,7 +35,7 @@ export function createRepositories(db: LocalDb, deps?: RepoDeps) {
     categories: notifying(createCategoryRepository(db, deps), ['create', 'update', 'remove'], changes),
     wallets: notifying(
       createWalletRepository(db, deps),
-      ['createWallet', 'setHidden', 'setIncludeInGeneral', 'createCard', 'setCardHidden'],
+      ['createWallet', 'addAccount', 'setHidden', 'setIncludeInGeneral', 'createCard', 'setCardHidden'],
       changes,
     ),
     debts: notifying(createDebtRepository(db, deps), ['create', 'update'], changes),

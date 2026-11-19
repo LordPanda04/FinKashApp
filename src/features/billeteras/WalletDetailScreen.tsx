@@ -15,6 +15,7 @@ import { ListRow } from '@/ui/ListRow';
 import { Screen } from '@/ui/Screen';
 import { colors } from '@/ui/tokens';
 import { AdjustForm } from './AdjustForm';
+import { EnableUsdForm } from './EnableUsdForm';
 import { CURRENCY_ORDER, walletBalances } from './presenter';
 
 const TYPE_LABEL: Record<MovementType, string> = {
@@ -36,6 +37,7 @@ export function WalletDetailScreen({ walletId }: { walletId: string }) {
   const router = useRouter();
   const repos = useRepositories();
   const [adjustOpen, setAdjustOpen] = useState(false);
+  const [usdOpen, setUsdOpen] = useState(false);
   const [confirmHide, setConfirmHide] = useState(false);
 
   const { data } = useQuery(async (r) => {
@@ -75,6 +77,9 @@ export function WalletDetailScreen({ walletId }: { walletId: string }) {
               title="Transferir"
               onPress={() => router.push(`/registrar?tipo=transferencia&desde=${data.accounts[0]?.id ?? ''}` as Href)}
             />
+            {data.accounts.some((a) => a.currency === 'USD') ? null : (
+              <ListRow icon="payments" title="Habilitar cuenta en dólares" onPress={() => setUsdOpen(true)} />
+            )}
             {wallet.isHidden ? (
               <ListRow icon="visibility" title="Mostrar billetera" onPress={() => repos.wallets.setHidden(wallet.id, false)} />
             ) : (
@@ -109,6 +114,7 @@ export function WalletDetailScreen({ walletId }: { walletId: string }) {
           onClose={() => setAdjustOpen(false)}
         />
       ) : null}
+      {usdOpen && wallet ? <EnableUsdForm walletId={wallet.id} onClose={() => setUsdOpen(false)} /> : null}
       <ConfirmDialog
         visible={confirmHide}
         title="Ocultar billetera"

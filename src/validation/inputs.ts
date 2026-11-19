@@ -46,6 +46,11 @@ export const walletInput = z.object({
 });
 export type WalletInput = z.infer<typeof walletInput>;
 
+export const addAccountInput = z.object({
+  walletId: z.string({ error: 'Elige una billetera.' }).min(1, 'Elige una billetera.'),
+  currency,
+});
+
 export const cardInput = z.object({
   name: name('El nombre', 40),
   issuer: z.string().trim().min(1).max(40).optional(),

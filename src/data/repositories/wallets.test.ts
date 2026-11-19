@@ -187,3 +187,90 @@ describe('tarjetas', () => {
     ]);
   });
 });
+
+describe('addAccount (D52: habilitar una cuenta desde el detalle)', () => {
+  async function plinOnlyPen() {
+    const r = await repo().createWallet({ ...yape, name: 'Plin', currencies: ['PEN'] });
+    if (!r.ok) throw new Error('setup');
+    return r.value.wallet;
+  }
+
+  it('agrega la cuenta USD a una billetera existente y no crea movimientos', async () => {
+    const wallet = await plinOnlyPen();
+    const r = await repo().addAccount({ walletId: wallet.id, currency: 'USD' });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.account).toMatchObject({ kind: 'wallet', walletId: wallet.id, currency: 'USD', creditLimitMinor: null });
+    expect(await db.getAll('SELECT kind, wallet_id, currency FROM accounts ORDER BY currency')).toEqual([
+      { kind: 'wallet', wallet_id: wallet.id, currency: 'PEN' },
+      { kind: 'wallet', wallet_id: wallet.id, currency: 'USD' },
+    ]);
+    expect(await count('movements')).toBe(0);
+  });
+
+  it('con saldo inicial crea además su apertura con fecha de hoy en Lima y el saldo derivado coincide', async () => {
+    const wallet = await plinOnlyPen();
+    const r = await repo().addAccount({ walletId: wallet.id, currency: 'USD', openingMinor: 5000 });
+    if (!r.ok) throw new Error('setup');
+    const movements = await db.getAll<Record<string, unknown>>('SELECT * FROM movements');
+    expect(movements).toHaveLength(1);
+    expect(movements[0]).toMatchObject({
+      type: 'opening', dest_account_id: r.value.account.id, source_account_id: null,
+      amount_minor: 5000, currency: 'USD', occurred_on: '2026-11-20',
+    });
+    const state = await loadLedgerState(db);
+    expect(accountBalance(r.value.account.id, state.movements)).toBe(5000);
+  });
+
+  it('la cuenta nueva no toca los saldos de las cuentas que ya existían', async () => {
+    const created = await repo().createWallet({ ...yape, currencies: ['PEN'], openings: { PEN: 12000 } });
+    if (!created.ok) throw new Error('setup');
+    await repo().addAccount({ walletId: created.value.wallet.id, currency: 'USD', openingMinor: 700 });
+    const state = await loadLedgerState(db);
+    expect(accountBalance(created.value.accounts[0]!.id, state.movements)).toBe(12000);
+  });
+
+  it('repetir la moneda da ACCOUNT_ALREADY_EXISTS y no escribe nada', async () => {
+    const wallet = await plinOnlyPen();
+    await repo().addAccount({ walletId: wallet.id, currency: 'USD' });
+    const again = await repo().addAccount({ walletId: wallet.id, currency: 'USD', openingMinor: 100 });
+    expect(again.ok).toBe(false);
+    if (!again.ok) expect(again.error.code).toBe('ACCOUNT_ALREADY_EXISTS');
+    const pen = await repo().addAccount({ walletId: wallet.id, currency: 'PEN' });
+    expect(pen.ok).toBe(false);
+    expect(await count('accounts')).toBe(2);
+    expect(await count('movements')).toBe(0);
+  });
+
+  it('una billetera inexistente da WALLET_NOT_FOUND', async () => {
+    const r = await repo().addAccount({ walletId: 'nope', currency: 'USD' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('WALLET_NOT_FOUND');
+    expect(await count('accounts')).toBe(0);
+  });
+
+  it.each([0, -1, 1.5])('un saldo inicial de %p da AMOUNT_INVALID y no deja la cuenta creada', async (amount) => {
+    const wallet = await plinOnlyPen();
+    const r = await repo().addAccount({ walletId: wallet.id, currency: 'USD', openingMinor: amount });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('AMOUNT_INVALID');
+    expect(await count('accounts')).toBe(1);
+    expect(await count('movements')).toBe(0);
+  });
+
+  it('una moneda que no existe da INPUT_INVALID', async () => {
+    const wallet = await plinOnlyPen();
+    const r = await repo().addAccount({ walletId: wallet.id, currency: 'EUR' as never });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('INPUT_INVALID');
+    expect(await count('accounts')).toBe(1);
+  });
+
+  it('también permite agregar PEN a una billetera creada solo con USD', async () => {
+    const created = await repo().createWallet({ ...yape, currencies: ['USD'] });
+    if (!created.ok) throw new Error('setup');
+    const r = await repo().addAccount({ walletId: created.value.wallet.id, currency: 'PEN' });
+    expect(r.ok).toBe(true);
+    expect(await count('accounts')).toBe(2);
+  });
+});

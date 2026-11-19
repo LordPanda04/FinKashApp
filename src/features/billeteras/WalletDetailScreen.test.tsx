@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { RepositoriesContext } from '@/data/RepositoriesContext';
 import type { WalletRecord } from '@/data/types';
 import type { Account } from '@/domain/ledger/types';
@@ -155,5 +155,92 @@ describe('Ocultar billetera', () => {
     );
     await fireEvent.press(await screen.findByRole('button', { name: 'Mostrar billetera' }));
     await waitFor(() => expect(fake.calls.setHidden).toHaveBeenCalledWith('w1', false));
+  });
+});
+
+describe('Habilitar cuenta en dólares (D52)', () => {
+  // Plin solo tiene cuenta en soles: saldo S/ 999.00.
+  async function openPlin() {
+    const fake = createFakeRepositories({ wallets: [yape, otra], accounts, movements });
+    await render(
+      <RepositoriesContext.Provider value={fake.repos}>
+        <WalletDetailScreen walletId="w2" />
+      </RepositoriesContext.Provider>,
+    );
+    await screen.findByText('S/ 999.00');
+    return fake;
+  }
+  const rowName = 'Habilitar cuenta en dólares';
+
+  it('una billetera sin cuenta USD ofrece la fila; una que ya la tiene, no', async () => {
+    await openPlin();
+    expect(screen.getByRole('button', { name: rowName })).toBeOnTheScreen();
+    expect(screen.queryByText('$ 0.00')).toBeNull();
+  });
+
+  it('una billetera con cuenta USD no ofrece habilitarla otra vez', async () => {
+    await open();
+    expect(screen.queryByRole('button', { name: rowName })).toBeNull();
+  });
+
+  it('tocar la fila abre la hoja con el saldo inicial opcional en dólares', async () => {
+    await openPlin();
+    await fireEvent.press(screen.getByRole('button', { name: rowName }));
+    const field = await screen.findByLabelText('Saldo inicial (USD)');
+    expect(field.props.value).toBe('');
+    expect(screen.getByText('$')).toBeOnTheScreen();
+  });
+
+  it('"Habilitar" con el campo vacío crea la cuenta sin saldo inicial, cierra la hoja y muestra $ 0.00', async () => {
+    const fake = await openPlin();
+    await fireEvent.press(screen.getByRole('button', { name: rowName }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Habilitar' }));
+    await waitFor(() => expect(fake.calls.addAccount).toHaveBeenCalledWith({ walletId: 'w2', currency: 'USD' }));
+    await waitFor(() => expect(screen.queryByLabelText('Saldo inicial (USD)')).toBeNull());
+    expect(await screen.findByText('$ 0.00')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: rowName })).toBeNull();
+  });
+
+  it('con "100.50" manda el saldo inicial en centavos y lo muestra', async () => {
+    const fake = await openPlin();
+    await fireEvent.press(screen.getByRole('button', { name: rowName }));
+    await fireEvent.changeText(await screen.findByLabelText('Saldo inicial (USD)'), '100.50');
+    await fireEvent.press(screen.getByRole('button', { name: 'Habilitar' }));
+    await waitFor(() => expect(fake.calls.addAccount).toHaveBeenCalledWith({ walletId: 'w2', currency: 'USD', openingMinor: 10050 }));
+    expect(await screen.findByText('$ 100.50')).toBeOnTheScreen();
+  });
+
+  it('un monto inválido ("24,50") muestra el error y no llama al repositorio', async () => {
+    const fake = await openPlin();
+    await fireEvent.press(screen.getByRole('button', { name: rowName }));
+    await fireEvent.changeText(await screen.findByLabelText('Saldo inicial (USD)'), '24,50');
+    await fireEvent.press(screen.getByRole('button', { name: 'Habilitar' }));
+    expect(await screen.findByText('Ingresa un monto válido mayor a 0, con hasta 2 decimales.')).toBeOnTheScreen();
+    expect(fake.calls.addAccount).not.toHaveBeenCalled();
+  });
+
+  it('un error del repositorio se muestra tal cual y la hoja sigue abierta', async () => {
+    const fake = await openPlin();
+    fake.addAccountResult = () => err('ACCOUNT_ALREADY_EXISTS', 'La billetera ya tiene una cuenta en USD.');
+    await fireEvent.press(screen.getByRole('button', { name: rowName }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Habilitar' }));
+    expect(await screen.findByText('La billetera ya tiene una cuenta en USD.')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Saldo inicial (USD)')).toBeOnTheScreen();
+  });
+
+  it('dos toques seguidos en "Habilitar" llaman al repositorio una sola vez', async () => {
+    const fake = await openPlin();
+    const original = fake.repos.wallets.addAccount;
+    (fake.repos.wallets as { addAccount: typeof original }).addAccount = async (input) => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      return original(input);
+    };
+    await fireEvent.press(screen.getByRole('button', { name: rowName }));
+    const button = await screen.findByRole('button', { name: 'Habilitar' });
+    await act(async () => {
+      await Promise.all([fireEvent.press(button), fireEvent.press(button)]);
+    });
+    await waitFor(() => expect(screen.queryByLabelText('Saldo inicial (USD)')).toBeNull());
+    expect(fake.calls.addAccount).toHaveBeenCalledTimes(1);
   });
 });

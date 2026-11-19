@@ -32,8 +32,9 @@ export function createFakeRepositories(
   const movements: Movement[] = [...(seed.movements ?? [])]; // copia: el falso agrega arreglos y no debe contaminar el arreglo de la prueba
   let nextId = 100;
 
-  let wallets: WalletRecord[] = seed.wallets ?? [];
-  const accounts: Account[] = seed.accounts ?? [];
+  let wallets: WalletRecord[] = [...(seed.wallets ?? [])];
+  // Copias: el falso agrega cuentas y movimientos y no debe contaminar los arreglos que definen las pruebas.
+  const accounts: Account[] = [...(seed.accounts ?? [])];
   const cards: CardRecord[] = seed.cards ?? [];
   const debts: FakeDebt[] = seed.debts ?? [];
   // `displayName: ''` = nombre omitido: así las pantallas no abren la hoja de bienvenida salvo que la prueba lo pida.
@@ -43,7 +44,7 @@ export function createFakeRepositories(
   let thresholds = seed.thresholds ?? [];
   let suggestPeriod = seed.suggestPeriod ?? false;
 
-  const calls = { setDevice: jest.fn(), setThreshold: jest.fn(), clearThreshold: jest.fn(), setIncludeInGeneral: jest.fn(), updateMovement: jest.fn(), removeMovement: jest.fn(), createMovement: jest.fn(), createWithNewDebt: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn(), confirmPeriod: jest.fn(), dismissPeriod: jest.fn() };
+  const calls = { setDevice: jest.fn(), setThreshold: jest.fn(), clearThreshold: jest.fn(), setIncludeInGeneral: jest.fn(), updateMovement: jest.fn(), removeMovement: jest.fn(), createMovement: jest.fn(), createWithNewDebt: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn(), confirmPeriod: jest.fn(), dismissPeriod: jest.fn(), addAccount: jest.fn() };
 
   const repos = {
     changes,
@@ -223,6 +224,21 @@ export function createFakeRepositories(
         changes.notify();
         return ok({ wallet, accounts: created });
       },
+      addAccount: async (input: { walletId: string; currency: Currency; openingMinor?: number }) => {
+        calls.addAccount(input);
+        if (fake.addAccountResult) return fake.addAccountResult(input);
+        if (!wallets.some((w) => w.id === input.walletId)) return err('WALLET_NOT_FOUND', 'La billetera no existe.');
+        if (accounts.some((a) => a.kind === 'wallet' && a.walletId === input.walletId && a.currency === input.currency)) {
+          return err('ACCOUNT_ALREADY_EXISTS', `La billetera ya tiene una cuenta en ${input.currency}.`);
+        }
+        const account: Account = { id: `a${nextId++}`, kind: 'wallet', walletId: input.walletId, currency: input.currency, creditLimitMinor: null };
+        accounts.push(account);
+        if (input.openingMinor) {
+          movements.push(movementOf({ id: `o${nextId++}`, type: 'opening', sourceAccountId: null, destAccountId: account.id, amountMinor: input.openingMinor, currency: input.currency }));
+        }
+        changes.notify();
+        return ok({ account });
+      },
       setIncludeInGeneral: async (id: string, include: boolean) => {
         calls.setIncludeInGeneral(id, include);
         const current = wallets.find((w) => w.id === id);
@@ -250,6 +266,7 @@ export function createFakeRepositories(
     repos: repos as unknown as Repositories,
     calls,
     changes,
+    addAccountResult: undefined as undefined | ((input: { walletId: string; currency: Currency; openingMinor?: number }) => unknown),
     confirmResult: undefined as undefined | ((input: { month: string; startedOn?: string }) => unknown),
     adjustResult: undefined as undefined | ((input: { accountId: string; declaredMinor: number }) => unknown),
     createResult: undefined as undefined | ((draft: Omit<Movement, 'id'>) => unknown),

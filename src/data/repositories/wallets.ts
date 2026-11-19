@@ -7,7 +7,7 @@ import { validateMovement } from '@/domain/ledger/validateMovement';
 import type { Currency } from '@/domain/money/money';
 import { todayInLima } from '@/lib/dates';
 import { err, ok, type Result } from '@/lib/result';
-import { cardInput, parseOrError, walletInput, type CardInput, type WalletInput } from '@/validation/inputs';
+import { addAccountInput, cardInput, parseOrError, walletInput, type CardInput, type WalletInput } from '@/validation/inputs';
 import { insertMovementRow } from './movementRows';
 import { abort, resolveDeps, transact, unwrap, type RepoDeps } from './shared';
 
@@ -116,6 +116,37 @@ export function createWalletRepository(db: LocalDb, depsIn?: RepoDeps) {
           await insertMovementRow(tx, unwrap(validateMovement(opening, state)), stamp);
         }
         return { wallet: (await findWallet(tx, walletId))!, accounts };
+      });
+    },
+
+    /**
+     * Habilita una cuenta en `currency` en una billetera ya creada (D52: se hace desde su detalle) y,
+     * si se indica, su saldo inicial (apertura con fecha de hoy). Una cuenta por (billetera, moneda).
+     */
+    async addAccount(input: { walletId: string; currency: Currency; openingMinor?: number }): Promise<Result<{ account: Account }>> {
+      const parsed = parseOrError(addAccountInput, { walletId: input.walletId, currency: input.currency });
+      if (!parsed.ok) return parsed;
+      const { walletId, currency } = parsed.value;
+      const openingMinor = input.openingMinor;
+      if (openingMinor !== undefined && (!Number.isSafeInteger(openingMinor) || openingMinor <= 0)) return amountInvalid('El saldo inicial');
+
+      return transact(db, async (tx) => {
+        if (!(await findWallet(tx, walletId))) abort('WALLET_NOT_FOUND', 'La billetera no existe.');
+        const existing = await tx.getOptional('SELECT id FROM accounts WHERE kind = ? AND wallet_id = ? AND currency = ?', ['wallet', walletId, currency]);
+        if (existing) abort('ACCOUNT_ALREADY_EXISTS', `La billetera ya tiene una cuenta en ${currency}.`);
+
+        const stamp = now();
+        const account: Account = { id: newId(), kind: 'wallet', walletId, currency, creditLimitMinor: null };
+        await tx.execute(
+          'INSERT INTO accounts (id, user_id, kind, wallet_id, currency, created_at, updated_at) VALUES (?, NULL, ?, ?, ?, ?, ?)',
+          [account.id, 'wallet', walletId, currency, stamp, stamp],
+        );
+        if (openingMinor !== undefined) {
+          const opening = buildOpening({ id: newId(), account, amountMinor: openingMinor, occurredOn: todayInLima(clock()) });
+          const state = await loadLedgerState(tx);
+          await insertMovementRow(tx, unwrap(validateMovement(opening, state)), stamp);
+        }
+        return { account };
       });
     },
 

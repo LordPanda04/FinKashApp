@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { RepositoriesContext } from '@/data/RepositoriesContext';
 import type { CardRecord, WalletRecord } from '@/data/types';
 import type { Account } from '@/domain/ledger/types';
@@ -176,5 +176,61 @@ describe('BilleterasScreen — deudas y bancos', () => {
     );
     await screen.findByText('Yape');
     await waitFor(() => expect(screen.getAllByText('Sin deudas pendientes.').length).toBeGreaterThanOrEqual(2));
+  });
+});
+
+describe('BilleterasScreen — cuentas USD (D52)', () => {
+  const plata: WalletRecord = { id: 'w9', name: 'Plata', walletType: 'cash', icon: 'payments', color: '#6B7280', isHidden: false, includeInGeneral: true, sortOrder: 0 };
+  const plataAccounts: Account[] = [{ id: 'plataPen', kind: 'wallet', walletId: 'w9', currency: 'PEN', creditLimitMinor: null }];
+  const plataMovements = [movementOf({ id: 'p1', type: 'opening', sourceAccountId: null, destAccountId: 'plataPen', amountMinor: 1000 })];
+
+  async function openPlata() {
+    const fake = createFakeRepositories({ wallets: [plata], accounts: plataAccounts, movements: plataMovements });
+    await render(
+      <RepositoriesContext.Provider value={fake.repos}>
+        <BilleterasScreen />
+      </RepositoriesContext.Provider>,
+    );
+    await screen.findByText('Plata');
+    return fake;
+  }
+
+  it('una billetera solo en soles muestra un único saldo, sin línea en dólares ni botones para agregarla', async () => {
+    await openPlata();
+    expect(screen.getByText('S/ 10.00')).toBeOnTheScreen();
+    expect(screen.queryByText(/\$/)).toBeNull();
+    expect(screen.queryByText(/USD|dólares/i)).toBeNull();
+    expect(screen.queryByRole('button', { name: /USD|dólares/i })).toBeNull();
+  });
+
+  it('después de habilitar USD la tarjeta muestra los dos saldos', async () => {
+    const fake = await openPlata();
+    await act(async () => {
+      await fake.repos.wallets.addAccount({ walletId: 'w9', currency: 'USD', openingMinor: 2550 });
+    });
+    expect(await screen.findByText('$ 25.50')).toBeOnTheScreen();
+    expect(screen.getByText('S/ 10.00')).toBeOnTheScreen();
+  });
+
+  it('el formulario "Nueva billetera" arranca con Soles marcada y Dólares sin marcar', async () => {
+    await open();
+    await fireEvent.press(screen.getByRole('button', { name: 'Agregar billetera' }));
+    expect(screen.getByRole('checkbox', { name: 'Soles (S/)' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Dólares ($)' })).not.toBeChecked();
+    expect(screen.queryByLabelText('Saldo inicial (USD)')).toBeNull();
+  });
+
+  it('se puede crear una billetera solo en dólares (marcar USD y desmarcar PEN)', async () => {
+    const { calls } = await open();
+    await fireEvent.press(screen.getByRole('button', { name: 'Agregar billetera' }));
+    await fireEvent.changeText(screen.getByLabelText('Nombre'), 'Dólares casa');
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Dólares ($)' }));
+    await fireEvent.press(screen.getByRole('checkbox', { name: 'Soles (S/)' }));
+    expect(screen.getByRole('checkbox', { name: 'Soles (S/)' })).not.toBeChecked();
+    expect(screen.queryByLabelText('Saldo inicial (PEN)')).toBeNull();
+    await fireEvent.changeText(screen.getByLabelText('Saldo inicial (USD)'), '80');
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar' }));
+    await screen.findByText('Dólares casa');
+    expect(calls.createWallet).toHaveBeenCalledWith(expect.objectContaining({ name: 'Dólares casa', currencies: ['USD'], openings: { USD: 8000 } }));
   });
 });

@@ -49,6 +49,24 @@ describe('createRepositories', () => {
     });
   });
 
+  it('primer arranque: "Efectivo" nace con saldo 0 y habilitar USD desde su detalle lo suma al resumen de Inicio', async () => {
+    const repos = createRepositories(db, deps);
+    const [efectivo] = await repos.wallets.listWallets();
+    expect(efectivo).toMatchObject({ name: 'Efectivo', walletType: 'cash', isHidden: false });
+    const before = await loadLedgerState(db);
+    const penAccount = before.accounts.find((a) => a.walletId === efectivo!.id)!;
+    expect(before.accounts.map((a) => a.currency)).toEqual(['PEN']);
+
+    const usd = await repos.wallets.addAccount({ walletId: efectivo!.id, currency: 'USD', openingMinor: 2500 });
+    if (!usd.ok) throw new Error('setup');
+    const state = await loadLedgerState(db);
+    const period = await repos.periods.activeRange();
+    expect(homeSummary(state, [penAccount.id, usd.value.account.id], period)).toEqual({
+      PEN: { availableMinor: 0, spentMinor: 0, remainingMinor: 0 },
+      USD: { availableMinor: 2500, spentMinor: 0, remainingMinor: 2500 },
+    });
+  });
+
   describe('notificaciones de cambios', () => {
     const food = { name: 'Comida', color: '#FF0000', icon: 'restaurant' };
 
@@ -60,6 +78,16 @@ describe('createRepositories', () => {
       expect(listener).toHaveBeenCalledTimes(1);
       await repos.categories.list();
       await repos.ledger.state();
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('habilitar una cuenta notifica una vez (la pantalla de detalle se actualiza sola)', async () => {
+      const repos = createRepositories(db, deps);
+      const [efectivo] = await repos.wallets.listWallets();
+      const listener = jest.fn();
+      repos.changes.subscribe(listener);
+      const r = await repos.wallets.addAccount({ walletId: efectivo!.id, currency: 'USD' });
+      expect(r.ok).toBe(true);
       expect(listener).toHaveBeenCalledTimes(1);
     });
 
