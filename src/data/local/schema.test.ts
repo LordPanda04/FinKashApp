@@ -48,6 +48,10 @@ describe('SYNCED_TABLES', () => {
     expect(DEVICE_SETTINGS_TABLE.name).toBe('device_settings');
     expect(NAMES).not.toContain('device_settings');
   });
+
+  it('device_settings guarda el nombre y la marca de billetera inicial (D50, D51)', () => {
+    expect(DEVICE_SETTINGS_TABLE.columns).toMatchObject({ display_name: 'text', default_wallet_seeded: 'integer' });
+  });
 });
 
 describe('planTables', () => {

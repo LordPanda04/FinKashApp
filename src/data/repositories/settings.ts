@@ -12,19 +12,28 @@ export interface DeviceSettings {
   showProjection: boolean;
   /** `general` o el id de la billetera elegida en Inicio. */
   homeScope: string;
+  /** Nombre para el saludo: `null` = aún no se pidió, `''` = el usuario lo omitió (D50). */
+  displayName: string | null;
 }
 
-const DEFAULTS: DeviceSettings = { hideAmounts: false, showProjection: false, homeScope: 'general' };
+const DEFAULTS: DeviceSettings = { hideAmounts: false, showProjection: false, homeScope: 'general', displayName: null };
 
 const devicePatch = z.object({
   hideAmounts: z.boolean(),
   showProjection: z.boolean(),
   homeScope: z.string().min(1, 'El alcance de Inicio no puede estar vacío.'),
+  displayName: z.string().trim().max(40, 'El nombre puede tener hasta 40 caracteres.'),
 }).partial();
 
 function deviceFromRow(row: Row): DeviceSettings {
   const r = new RowReader('device_settings', row);
-  return { hideAmounts: r.bool('hide_amounts'), showProjection: r.bool('show_projection'), homeScope: r.text('home_scope') };
+  return {
+    hideAmounts: r.bool('hide_amounts'),
+    showProjection: r.bool('show_projection'),
+    homeScope: r.text('home_scope'),
+    // En instalaciones anteriores la columna llega en NULL: equivale a "aún no se pidió".
+    displayName: r.textOrNull('display_name'),
+  };
 }
 
 export interface ThresholdRecord {
@@ -49,11 +58,11 @@ export function createSettingsRepository(db: LocalDb, depsIn?: RepoDeps) {
       await db.writeTransaction(async (tx) => {
         const row = await tx.getOptional<Row>('SELECT * FROM device_settings LIMIT 1');
         const next = { ...(row ? deviceFromRow(row) : DEFAULTS), ...value };
-        const params = [next.hideAmounts ? 1 : 0, next.showProjection ? 1 : 0, next.homeScope];
+        const params = [next.hideAmounts ? 1 : 0, next.showProjection ? 1 : 0, next.homeScope, next.displayName];
         if (row) {
-          await tx.execute('UPDATE device_settings SET hide_amounts = ?, show_projection = ?, home_scope = ? WHERE id = ?', [...params, row.id]);
+          await tx.execute('UPDATE device_settings SET hide_amounts = ?, show_projection = ?, home_scope = ?, display_name = ? WHERE id = ?', [...params, row.id]);
         } else {
-          await tx.execute('INSERT INTO device_settings (id, hide_amounts, show_projection, home_scope) VALUES (?, ?, ?, ?)', [newId(), ...params]);
+          await tx.execute('INSERT INTO device_settings (id, hide_amounts, show_projection, home_scope, display_name) VALUES (?, ?, ?, ?, ?)', [newId(), ...params]);
         }
       });
     },

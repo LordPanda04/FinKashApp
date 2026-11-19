@@ -67,7 +67,11 @@ export const SYNCED_TABLES: TableSpec[] = [
 /** Solo local: nunca se sincroniza ni tiene gemela. */
 export const DEVICE_SETTINGS_TABLE: TableSpec = {
   name: 'device_settings',
-  columns: { hide_amounts: 'integer', show_projection: 'integer', home_scope: 'text' },
+  columns: {
+    hide_amounts: 'integer', show_projection: 'integer', home_scope: 'text',
+    // D50: `null` = aún no se pidió el nombre, '' = omitido. D51: marca de la billetera inicial "Efectivo".
+    display_name: 'text', default_wallet_seeded: 'integer',
+  },
 };
 
 export type SchemaMode = 'local' | 'synced';

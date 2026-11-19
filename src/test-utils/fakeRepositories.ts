@@ -19,7 +19,7 @@ export function createFakeRepositories(
     accounts?: Account[];
     cards?: CardRecord[];
     debts?: FakeDebt[];
-    device?: { hideAmounts: boolean; showProjection: boolean; homeScope: string };
+    device?: { hideAmounts: boolean; showProjection: boolean; homeScope: string; displayName?: string | null };
     thresholds?: { id: string; currency: Currency; amountMinor: number; walletId: string | null }[];
     period?: { start: string; end: string };
   } = {},
@@ -33,7 +33,10 @@ export function createFakeRepositories(
   const accounts: Account[] = seed.accounts ?? [];
   const cards: CardRecord[] = seed.cards ?? [];
   const debts: FakeDebt[] = seed.debts ?? [];
-  let device = seed.device ?? { hideAmounts: false, showProjection: false, homeScope: 'general' };
+  // `displayName: ''` = nombre omitido: así las pantallas no abren la hoja de bienvenida salvo que la prueba lo pida.
+  let device: { hideAmounts: boolean; showProjection: boolean; homeScope: string; displayName: string | null } = {
+    hideAmounts: false, showProjection: false, homeScope: 'general', displayName: '', ...seed.device,
+  };
   let thresholds = seed.thresholds ?? [];
 
   const calls = { setDevice: jest.fn(), setThreshold: jest.fn(), clearThreshold: jest.fn(), setIncludeInGeneral: jest.fn(), updateMovement: jest.fn(), removeMovement: jest.fn(), createMovement: jest.fn(), createWithNewDebt: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn() };
