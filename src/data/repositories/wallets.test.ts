@@ -1,6 +1,6 @@
 /** @jest-environment node */
 import { viewTableSpecs } from '@/data/local/schema';
-import { seedDatabase } from '@/data/local/seed';
+import { seedWithoutDefaultWallet } from '@/data/local/testSeed';
 import { createTestDb, type TestDb } from '@/data/local/testDb';
 import { accountBalance } from '@/domain/ledger/balances';
 import { loadLedgerState } from '@/data/local/ledgerState';
@@ -14,7 +14,7 @@ const deps = () => ({ newId: () => `id-${++n}`, clock: () => new Date('2026-11-2
 beforeEach(async () => {
   n = 0;
   db = await createTestDb(viewTableSpecs());
-  await seedDatabase(db, deps());
+  await seedWithoutDefaultWallet(db, deps());
 });
 afterEach(async () => {
   await db.close();

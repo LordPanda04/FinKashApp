@@ -1,4 +1,6 @@
 /** @jest-environment node */
+import { accountBalance } from '@/domain/ledger/balances';
+import { loadLedgerState } from './ledgerState';
 import { createTestDb, type TestDb } from './testDb';
 import { seedDatabase } from './seed';
 import { viewTableSpecs } from './schema';
@@ -62,6 +64,112 @@ describe('seedDatabase', () => {
     await seedDatabase(db, deps());
     const row = await db.getOptional<{ user_id: string | null; created_at: string; updated_at: string }>('SELECT user_id, created_at, updated_at FROM categories LIMIT 1');
     expect(row).toEqual({ user_id: null, created_at: '2026-11-20T15:00:00.000Z', updated_at: '2026-11-20T15:00:00.000Z' });
+  });
+});
+
+describe('primer arranque: billetera "Efectivo" y primer periodo (D51)', () => {
+  const wallets = () => db.getAll<Record<string, unknown>>('SELECT * FROM wallets');
+  const seededFlag = async () =>
+    (await db.getOptional<{ default_wallet_seeded: number | null }>('SELECT default_wallet_seeded FROM device_settings LIMIT 1'))!.default_wallet_seeded;
+  const addWallet = (id: string, name: string) =>
+    db.execute(
+      "INSERT INTO wallets (id, name, wallet_type, icon, color, is_hidden, include_in_general, sort_order) VALUES (?, ?, 'cash', 'i', '#000000', 0, 1, 0)",
+      [id, name],
+    );
+
+  it('en una instalación vacía crea "Efectivo" con una sola cuenta PEN y ningún movimiento', async () => {
+    await seedDatabase(db, deps());
+    const list = await wallets();
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({
+      name: 'Efectivo', wallet_type: 'cash', icon: 'payments', color: '#6B7280',
+      is_hidden: 0, include_in_general: 1, sort_order: 0, user_id: null,
+    });
+    expect(await db.getAll('SELECT kind, wallet_id, currency FROM accounts')).toEqual([
+      { kind: 'wallet', wallet_id: list[0]!.id, currency: 'PEN' },
+    ]);
+    expect(await db.getAll('SELECT id FROM movements')).toEqual([]);
+  });
+
+  it('crea el periodo del mes actual ya confirmado, con inicio el día 1', async () => {
+    await seedDatabase(db, deps());
+    expect(await db.getAll('SELECT month, started_on, confirmed_at, dismissed_at FROM financial_periods')).toEqual([
+      { month: '2026-11', started_on: '2026-11-01', confirmed_at: '2026-11-20T15:00:00.000Z', dismissed_at: null },
+    ]);
+  });
+
+  it('deja la marca default_wallet_seeded en 1', async () => {
+    await seedDatabase(db, deps());
+    expect(await seededFlag()).toBe(1);
+  });
+
+  it('el saldo derivado de "Efectivo" es 0 y se puede usar de inmediato', async () => {
+    await seedDatabase(db, deps());
+    const state = await loadLedgerState(db);
+    expect(state.accounts).toHaveLength(1);
+    expect(accountBalance(state.accounts[0]!.id, state.movements)).toBe(0);
+  });
+
+  it('correrla varias veces no duplica la billetera, la cuenta ni el periodo', async () => {
+    await seedDatabase(db, deps());
+    await seedDatabase(db, deps());
+    await seedDatabase(db, deps());
+    expect(await wallets()).toHaveLength(1);
+    expect(await db.getAll('SELECT id FROM accounts')).toHaveLength(1);
+    expect(await db.getAll('SELECT id FROM financial_periods')).toHaveLength(1);
+  });
+
+  it('si el usuario la renombra y la oculta, no vuelve a crearse', async () => {
+    await seedDatabase(db, deps());
+    await db.execute("UPDATE wallets SET name = 'Mi caja', is_hidden = 1");
+    await seedDatabase(db, deps());
+    expect(await wallets()).toMatchObject([{ name: 'Mi caja', is_hidden: 1 }]);
+  });
+
+  it('si ya hay billeteras (instalación previa) no crea "Efectivo" ni periodo, y deja la marca en 1', async () => {
+    await addWallet('w1', 'Yape');
+    await seedDatabase(db, deps());
+    expect((await wallets()).map((w) => w.name)).toEqual(['Yape']);
+    expect(await db.getAll('SELECT id FROM financial_periods')).toEqual([]);
+    expect(await seededFlag()).toBe(1);
+  });
+
+  it('con la marca en 1 y sin billeteras no crea nada', async () => {
+    await db.execute("INSERT INTO device_settings (id, hide_amounts, show_projection, home_scope, default_wallet_seeded) VALUES ('d', 0, 0, 'general', 1)");
+    await seedDatabase(db, deps());
+    expect(await wallets()).toEqual([]);
+    expect(await db.getAll('SELECT id FROM financial_periods')).toEqual([]);
+  });
+
+  it('una fila de ajustes heredada (marca NULL) con billeteras no falla y no duplica la fila', async () => {
+    await db.execute("INSERT INTO device_settings (id, hide_amounts, show_projection, home_scope) VALUES ('legacy', 1, 0, 'general')");
+    await addWallet('w1', 'Yape');
+    await seedDatabase(db, deps());
+    expect(await db.getAll('SELECT id, hide_amounts, default_wallet_seeded FROM device_settings')).toEqual([
+      { id: 'legacy', hide_amounts: 1, default_wallet_seeded: 1 },
+    ]);
+  });
+
+  it('una fila de ajustes heredada (marca NULL) sin billeteras sí crea "Efectivo"', async () => {
+    await db.execute("INSERT INTO device_settings (id, hide_amounts, show_projection, home_scope) VALUES ('legacy', 0, 0, 'general')");
+    await seedDatabase(db, deps());
+    expect((await wallets()).map((w) => w.name)).toEqual(['Efectivo']);
+  });
+
+  it('las filas nuevas llevan las marcas de tiempo del reloj', async () => {
+    await seedDatabase(db, deps());
+    expect(await db.getAll('SELECT created_at, updated_at FROM wallets')).toEqual([
+      { created_at: '2026-11-20T15:00:00.000Z', updated_at: '2026-11-20T15:00:00.000Z' },
+    ]);
+    expect(await db.getAll('SELECT created_at, updated_at FROM accounts')).toEqual([
+      { created_at: '2026-11-20T15:00:00.000Z', updated_at: '2026-11-20T15:00:00.000Z' },
+    ]);
+  });
+
+  it('el día de Lima manda: a las 23:00 en Lima (04:00Z del día siguiente) el periodo es del mes de Lima', async () => {
+    let n = 0;
+    await seedDatabase(db, { newId: () => `id-${++n}`, clock: () => new Date('2026-12-01T03:00:00Z') });
+    expect(await db.getAll('SELECT month, started_on FROM financial_periods')).toEqual([{ month: '2026-11', started_on: '2026-11-01' }]);
   });
 });
 

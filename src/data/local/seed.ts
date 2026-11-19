@@ -1,5 +1,6 @@
 import type { Clock, IdGen } from '@/data/types';
 import { nameKey } from '@/data/repositories/shared';
+import { firstDayOfMonth, monthOf, todayInLima, type IsoDate } from '@/lib/dates';
 import { newId as defaultNewId } from '@/lib/id';
 import type { LocalDb, LocalTx } from './db';
 
@@ -44,13 +45,50 @@ async function consolidateCategories(tx: LocalTx, now: string): Promise<void> {
   }
 }
 
+/** Billetera inicial (D51): una sola cuenta en PEN y sin movimiento de apertura (saldo derivado 0). */
+const DEFAULT_WALLET = { name: 'Efectivo', walletType: 'cash', icon: 'payments', color: '#6B7280' } as const;
+
 /**
- * Crea lo que la app necesita para funcionar: categorías iniciales y ajustes del dispositivo, y fusiona
- * las categorías duplicadas de versiones anteriores. Es idempotente: puede correr en cada arranque.
+ * Primer arranque (D51): crea "Efectivo" y el periodo del mes ya confirmado (día 1), una sola vez.
+ * Solo corre si la marca `default_wallet_seeded` aún no está en 1; si ya hay billeteras (instalaciones
+ * anteriores) no crea nada. En todo caso deja la marca en 1.
+ */
+async function seedDefaultWallet(tx: LocalTx, newId: IdGen, now: string, today: IsoDate): Promise<void> {
+  const settings = (await tx.getOptional<{ id: string; default_wallet_seeded: number | null }>(
+    'SELECT id, default_wallet_seeded FROM device_settings LIMIT 1',
+  ))!;
+  if (settings.default_wallet_seeded === 1) return;
+
+  if (!(await tx.getOptional('SELECT id FROM wallets LIMIT 1'))) {
+    const walletId = newId();
+    await tx.execute(
+      `INSERT INTO wallets (id, user_id, name, wallet_type, icon, color, is_hidden, include_in_general, sort_order, created_at, updated_at)
+       VALUES (?, NULL, ?, ?, ?, ?, 0, 1, 0, ?, ?)`,
+      [walletId, DEFAULT_WALLET.name, DEFAULT_WALLET.walletType, DEFAULT_WALLET.icon, DEFAULT_WALLET.color, now, now],
+    );
+    await tx.execute(
+      'INSERT INTO accounts (id, user_id, kind, wallet_id, currency, created_at, updated_at) VALUES (?, NULL, ?, ?, ?, ?, ?)',
+      [newId(), 'wallet', walletId, 'PEN', now, now],
+    );
+    if (!(await tx.getOptional('SELECT id FROM financial_periods WHERE month = ?', [monthOf(today)]))) {
+      await tx.execute(
+        'INSERT INTO financial_periods (id, user_id, month, started_on, confirmed_at, dismissed_at, created_at, updated_at) VALUES (?, NULL, ?, ?, ?, NULL, ?, ?)',
+        [newId(), monthOf(today), firstDayOfMonth(today), now, now, now],
+      );
+    }
+  }
+  await tx.execute('UPDATE device_settings SET default_wallet_seeded = 1 WHERE id = ?', [settings.id]);
+}
+
+/**
+ * Crea lo que la app necesita para funcionar: categorías iniciales, ajustes del dispositivo y, en el
+ * primer arranque, la billetera "Efectivo" con su primer periodo; y fusiona las categorías duplicadas
+ * de versiones anteriores. Es idempotente: puede correr en cada arranque.
  */
 export async function seedDatabase(db: LocalDb, deps: { newId?: IdGen; clock?: Clock } = {}): Promise<void> {
   const newId = deps.newId ?? defaultNewId;
-  const now = (deps.clock ?? (() => new Date()))().toISOString();
+  const instant = (deps.clock ?? (() => new Date()))();
+  const now = instant.toISOString();
 
   await db.writeTransaction(async (tx) => {
     await consolidateCategories(tx, now);
@@ -67,9 +105,10 @@ export async function seedDatabase(db: LocalDb, deps: { newId?: IdGen; clock?: C
     }
     if (!(await tx.getOptional('SELECT id FROM device_settings LIMIT 1'))) {
       await tx.execute(
-        'INSERT INTO device_settings (id, hide_amounts, show_projection, home_scope) VALUES (?, 0, 0, ?)',
+        'INSERT INTO device_settings (id, hide_amounts, show_projection, home_scope, default_wallet_seeded) VALUES (?, 0, 0, ?, 0)',
         [newId(), 'general'],
       );
     }
+    await seedDefaultWallet(tx, newId, now, todayInLima(instant));
   });
 }
