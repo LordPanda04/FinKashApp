@@ -80,9 +80,24 @@
 - [x] Aprobar D36 (detalles de implementación del dominio; aceptada 2026-11-19).
 - [x] Plan de la Fase 8 redactado: `docs/superpowers/plans/2026-11-19-fase8-primer-arranque-y-periodos.md` (8 tareas). **Espera tu confirmación** (sección "Decisiones de este plan") antes de escribir código.
 
-## Fase 8 (plan aprobado por el usuario el 2026-11-19; en ejecución)
-- [x] Decisiones del plan confirmadas; D52 (cuentas PEN/USD) agregada por el usuario.
-- [ ] Ejecutar las tareas 1–9 del plan (primer arranque con nombre y "Efectivo", periodos, "Elegir mes" en Historial, habilitar USD desde el detalle de una billetera). Sin módulos nativos nuevos: no hay que recompilar el development build.
+## Fase 8 (en código; pendiente de tu verificación visual)
+- [x] Plan `2026-11-19-fase8-primer-arranque-y-periodos.md` aprobado y ejecutado (tareas 1–8; D53 aceptada; D52 agregada por el usuario).
+- [ ] **Verificación visual (usuario)** — sin módulos nativos nuevos (basta `npx expo start`):
+  - **Instalación nueva** (desinstalar la app o borrar sus datos): al abrir aparece la hoja "¿Cómo te llamas?"; "Continuar" con el campo vacío avisa "Escribe tu nombre u omite este paso."; con "Ana" Inicio saluda `Hola!, Ana`; "Omitir" deja "Hola!" y no vuelve a preguntar; tocar fuera de la hoja equivale a omitir.
+  - Tocar el saludo abre "Tu nombre" para editarlo (vaciarlo vuelve a "Hola!"; más de 40 caracteres da error; un nombre largo se recorta a una línea).
+  - Billeteras muestra **"Efectivo"** (tipo Principal, `S/ 0.00`, sin línea en dólares); Inicio no muestra "Crea tu primera billetera" ni el aviso de nuevo periodo (el primer periodo ya está confirmado).
+  - Registrar un ingreso en Efectivo y verlo en el saldo; ocultar o renombrar "Efectivo" y reabrir la app: no reaparece.
+  - **Instalación existente (tu emulador)**: la hoja de nombre aparece una vez; aparece el aviso **"Iniciar nuevo periodo"** bajo el saludo. "Ahora no" lo oculta hoy (vuelve mañana); "Iniciar periodo" abre la pantalla de confirmación.
+  - Confirmación del periodo: título "Iniciar periodo de Noviembre", interruptor "¿Empieza el día 1?" (al apagarlo aparece el calendario; un día futuro o de otro mes muestra el mensaje y deshabilita el botón), lista de billeteras **visibles** con su saldo (las ocultas no aparecen), "Corregir" abre el Arreglo de esa billetera y el saldo se actualiza, "Confirmar periodo" vuelve a Inicio; después el aviso desaparece y el resumen dice "Periodo desde el 1 de noviembre".
+  - Historial → Fecha → **"Elegir mes…"**: lista los meses con movimientos (el actual primero); elegir un mes filtra y el chip pasa a decir, por ejemplo, "Octubre 2026"; elegir el mes actual vuelve a "Fecha".
+  - **Cuentas PEN/USD (D52):** "Agregar billetera" arranca con Soles marcada; se puede crear una billetera solo en dólares; en la grilla una billetera solo en soles no muestra `$` ni botones de dólares; en el detalle de esa billetera aparece "Habilitar cuenta en dólares" (con saldo inicial opcional) y, tras habilitarla, la fila desaparece y la tarjeta muestra los dos saldos.
+- [ ] Anotar aquí las diferencias con Stitch que veas.
+- [ ] Confirmar D54.
+
+## Siguiente
+- [ ] Config plugin de Expo para fijar `cmake.dir` (hoy en `android/local.properties`, local).
+- [ ] Plan de la Fase 9 (Supabase, RLS, Auth, sincronización con PowerSync). Ojo: la semilla de "Efectivo" no debe duplicar datos al iniciar sesión en un dispositivo cuya cuenta ya tiene billeteras.
+- [ ] Decidir los menores diferidos de la Fase 8 (ver `COMPLETED_TASKS.md`).
 
 ## Pendientes de diseño
 - [ ] Decidir si el nuevo Registrar (3 opciones) y las pantallas faltantes (`DESIGN_SYSTEM.md` §8) se diseñan antes en Stitch o se construyen con los componentes existentes. Debe estar resuelto antes del plan de interfaz (Fases 6–7).
@@ -90,7 +105,7 @@
 
 ## Planes siguientes
 - [x] Fase 5: base local PowerSync y repositorios (ver arriba).
-- [ ] Fases 6–8: navegación, pantallas y periodos.
+- [x] Fases 6–8: navegación, pantallas y periodos (en código; falta tu verificación visual).
 - [ ] Fases 9–11: Supabase, sincronización, EAS.
 
 Ver `DEVELOPMENT_ROADMAP.md`.

@@ -198,7 +198,7 @@ Con los ajustes del 2026-11-17, la lista queda así (✳️ = ahora definida a n
 9. Contenido de los filtros del Historial.
 10. ✳️ Selector de deuda al registrar un movimiento con categoría "Préstamo" (§10.3); detalle de deuda.
 11. Crear/detalle de tarjeta de crédito (línea, consumido, disponible, cierre, pago).
-12. ✳️ Aviso de inicio de periodo mensual y confirmación con la lista de saldos por billetera (`FINANCIAL_RULES.md` §10).
+12. ✳️ Aviso de inicio de periodo mensual y confirmación con la lista de saldos por billetera (`FINANCIAL_RULES.md` §10; construidos en la Fase 8 según §10.7, sin diseño en Stitch).
 13. Ajustes: umbrales, perfil, exportación, iniciar/cerrar sesión.
 14. Interacción de la dona (selección de segmento) y del gráfico de flujo.
 15. ✳️ Hoja de selección de billeteras con casillas (Saldo general).
@@ -314,3 +314,10 @@ Boceto en texto:
 - **[Usuario]** La billetera **"Efectivo"** ya existe al abrir la app por primera vez (saldo 0); Inicio no muestra "Crea tu primera billetera" porque ya hay una.
 - **[Propuesta]** El nombre se pide en una hoja inferior de vidrio ("¿Cómo te llamas?") con un `TextField`, el CTA "Continuar" y la acción secundaria "Omitir" (el saludo queda en "Hola!"). Sin diseño en Stitch: se construye con `BottomSheet`, `TextField` y `PrimaryButton`.
 - **[Propuesta]** Para editarlo, se toca el saludo de Inicio y se abre la misma hoja con el título "Tu nombre" (no existe aún una pantalla de Ajustes, §8 punto 13).
+
+### 10.7 Periodo mensual (Fase 8, 2026-11-19)
+- **[Propuesta]** Aviso en Inicio, bajo el saludo: `GlassCard` con ícono `calendar_today`, título "Iniciar nuevo periodo", texto "Es <mes>. Revisa tus saldos y empieza el periodo.", `PrimaryButton` "Iniciar periodo" y acción de texto "Ahora no" (descarta hasta mañana). No se muestra sin billeteras.
+- **[Propuesta]** Pantalla `/periodo` (fuera de las pestañas, con botón volver): título "Iniciar periodo de <Mes>"; tarjeta con el interruptor "¿Empieza el día 1?" (al apagarlo, `Calendar` y mensaje de error si el día es futuro o de otro mes); lista (`GroupedList`) de billeteras **visibles** con ícono, nombre, saldo por moneda y la acción "Corregir" (abre el Arreglo de billetera); `PrimaryButton` "Confirmar periodo".
+- **[Propuesta]** Resumen de Inicio: línea `label-md` en `on-surface-muted` con "Periodo desde el <día> de <mes>" bajo el selector de alcance.
+- **[Propuesta]** Historial: el filtro Fecha suma "Elegir mes…" (lista de meses con movimientos, el actual primero); con un mes elegido, el chip muestra su nombre, por ejemplo "Octubre 2026".
+- **[Usuario]** (D52) Detalle de billetera: fila "Habilitar cuenta en dólares" cuando la billetera no tiene cuenta `USD` (ver §10.2).

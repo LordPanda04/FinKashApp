@@ -108,6 +108,7 @@ Convenciones:
   - Al confirmar se muestra la lista de billeteras visibles con su saldo calculado, para que el usuario lo valide o lo corrija con "Arreglo de billetera".
   - Si el usuario descarta la sugerencia, el periodo anterior sigue activo y la sugerencia vuelve a aparecer después.
   - Inicio muestra el periodo activo. El Historial y los reportes permiten ver cualquier mes.
+- **[Propuesta]** (implementado en la Fase 8) El día de inicio debe estar dentro del mes que se confirma y no ser posterior a hoy. En una instalación nueva, el primer periodo (mes actual, día 1) ya nace confirmado junto con la billetera "Efectivo", para que el aviso aparezca recién el mes siguiente. Las pantallas de Historial permiten elegir cualquier mes; los gráficos de Inicio siguen mostrando solo el periodo activo.
 
 ## 11. Categorías, fechas, umbrales y acceso
 - **[Usuario]** Existe la categoría de sistema protegida **"Otros"**, que no se puede eliminar.
