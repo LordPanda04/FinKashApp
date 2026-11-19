@@ -21,7 +21,13 @@ const routes = {
   '(tabs)/index': Inicio,
   '(tabs)/historial': Historial,
   '(tabs)/registrar': Registrar,
-  '(tabs)/billeteras': Billeteras,
+  '(tabs)/billeteras': function BilleterasConDatos() {
+    return (
+      <RepositoriesContext.Provider value={createFakeRepositories().repos}>
+        <Billeteras />
+      </RepositoriesContext.Provider>
+    );
+  },
   '(tabs)/categorias': function CategoriasConDatos() {
     return (
       <RepositoriesContext.Provider value={createFakeRepositories().repos}>
@@ -122,6 +128,12 @@ describe('barra de pestañas', () => {
 });
 
 describe('pantallas', () => {
+  it('Billeteras muestra su título y sus secciones', async () => {
+    await renderRouter(routes, { initialUrl: '/billeteras' });
+    expect(screen.getByRole('header', { name: 'Billeteras' })).toBeOnTheScreen();
+    expect(await screen.findByText('Mis Billeteras')).toBeOnTheScreen();
+  });
+
   it('Categorías muestra su título y sus datos', async () => {
     await renderRouter(routes, { initialUrl: '/categorias' });
     expect(screen.getByRole('header', { name: 'Categorías' })).toBeOnTheScreen();
@@ -137,7 +149,6 @@ describe('pantallas', () => {
   it.each([
     ['/historial', 'Historial', 'Aquí irá el historial de movimientos.'],
     ['/registrar', 'Registrar movimiento', 'Aquí irá el formulario para registrar movimientos.'],
-    ['/billeteras', 'Billeteras', 'Aquí irán tus billeteras, tarjetas y deudas.'],
   ])('%s muestra su título y su estado vacío en español', async (url, title, empty) => {
     await renderRouter(routes, { initialUrl: url });
     expect(screen.getByRole('header', { name: title })).toBeOnTheScreen();

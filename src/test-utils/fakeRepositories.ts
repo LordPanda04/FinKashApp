@@ -1,20 +1,37 @@
 import { createChangeNotifier } from '@/data/changes';
 import type { Repositories } from '@/data/index';
-import type { CategoryRecord } from '@/data/types';
-import type { Movement } from '@/domain/ledger/types';
+import type { CardRecord, CategoryRecord, DebtRecord, WalletRecord } from '@/data/types';
+import type { Account, LedgerState, Movement } from '@/domain/ledger/types';
+import type { Currency } from '@/domain/money/money';
 import { err, ok } from '@/lib/result';
 
 /**
  * Repositorios en memoria para probar pantallas (la capa de datos real se prueba con SQLite en
  * `src/data`). Imitan mensajes y códigos de error de los repositorios reales y notifican cambios.
  */
-export function createFakeRepositories(seed: { categories?: CategoryRecord[]; movements?: Movement[] } = {}) {
+export type FakeDebt = DebtRecord & { pendingMinor: number; status: 'pending' | 'paid' };
+
+export function createFakeRepositories(
+  seed: {
+    categories?: CategoryRecord[];
+    movements?: Movement[];
+    wallets?: WalletRecord[];
+    accounts?: Account[];
+    cards?: CardRecord[];
+    debts?: FakeDebt[];
+  } = {},
+) {
   const changes = createChangeNotifier();
   let categories: CategoryRecord[] = seed.categories ?? seededCategories();
   const movements: Movement[] = seed.movements ?? [];
   let nextId = 100;
 
-  const calls = { create: jest.fn(), update: jest.fn(), remove: jest.fn() };
+  let wallets: WalletRecord[] = seed.wallets ?? [];
+  const accounts: Account[] = seed.accounts ?? [];
+  const cards: CardRecord[] = seed.cards ?? [];
+  const debts: FakeDebt[] = seed.debts ?? [];
+
+  const calls = { create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn() };
 
   const repos = {
     changes,
@@ -59,12 +76,60 @@ export function createFakeRepositories(seed: { categories?: CategoryRecord[]; mo
       },
     },
     movements: {
-      list: async (filter: { categoryId?: string } = {}) =>
-        movements.filter((m) => !filter.categoryId || m.categoryId === filter.categoryId),
+      list: async (filter: { categoryId?: string; accountId?: string } = {}) =>
+        movements.filter(
+          (m) =>
+            (!filter.categoryId || m.categoryId === filter.categoryId) &&
+            (!filter.accountId || m.sourceAccountId === filter.accountId || m.destAccountId === filter.accountId),
+        ),
+      adjustWallet: async (input: { accountId: string; declaredMinor: number; occurredOn?: string }) => {
+        calls.adjustWallet(input);
+        return fakeAdjust(input);
+      },
+    },
+    debts: { list: async () => debts },
+    ledger: {
+      state: async (): Promise<LedgerState> => ({ accounts: [...accounts], movements: [...movements], categories: [], debts: [] }),
+    },
+    wallets: {
+      listWallets: async () => [...wallets].sort((a, b) => a.sortOrder - b.sortOrder),
+      listCards: async () => [...cards],
+      listAccounts: async () => [...accounts],
+      createWallet: async (input: { name: string; walletType: WalletRecord['walletType']; icon: string; color: string; currencies: Currency[]; openings?: Partial<Record<Currency, number>> }) => {
+        calls.createWallet(input);
+        if (!input.name.trim()) return err('INPUT_INVALID', 'El nombre es obligatorio.');
+        const wallet: WalletRecord = { id: `w${nextId++}`, name: input.name.trim(), walletType: input.walletType, icon: input.icon, color: input.color, isHidden: false, includeInGeneral: true, sortOrder: nextId };
+        wallets = [...wallets, wallet];
+        const created = input.currencies.map((currency): Account => ({ id: `a${nextId++}`, kind: 'wallet', walletId: wallet.id, currency, creditLimitMinor: null }));
+        accounts.push(...created);
+        for (const a of created) {
+          const amount = input.openings?.[a.currency];
+          if (amount) movements.push(movementOf({ id: `o${nextId++}`, type: 'opening', sourceAccountId: null, destAccountId: a.id, amountMinor: amount, currency: a.currency }));
+        }
+        changes.notify();
+        return ok({ wallet, accounts: created });
+      },
+      setHidden: async (id: string, hidden: boolean) => {
+        calls.setHidden(id, hidden);
+        const current = wallets.find((w) => w.id === id);
+        if (!current) return err('WALLET_NOT_FOUND', 'La billetera no existe.');
+        const next = { ...current, isHidden: hidden };
+        wallets = wallets.map((w) => (w.id === id ? next : w));
+        changes.notify();
+        return ok(next);
+      },
     },
   };
 
-  return { repos: repos as unknown as Repositories, calls, changes };
+  /** Respuesta simulada de adjustWallet: configurable desde la prueba con `fake.adjustResult`. */
+  const fakeAdjust = (input: { accountId: string; declaredMinor: number }) => (fake.adjustResult ? fake.adjustResult(input) : ok(null));
+  const fake = {
+    repos: repos as unknown as Repositories,
+    calls,
+    changes,
+    adjustResult: undefined as undefined | ((input: { accountId: string; declaredMinor: number }) => unknown),
+  };
+  return fake;
 }
 
 export function seededCategories(): CategoryRecord[] {
