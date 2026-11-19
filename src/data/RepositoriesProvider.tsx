@@ -1,10 +1,13 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { createRepositories, type Repositories } from './index';
 import { openLocalDatabase } from './local/database';
 import { seedDatabase } from './local/seed';
+import { SYNCED_TABLES } from './local/schema';
+import { RepositoriesContext } from './RepositoriesContext';
 
-const RepositoriesContext = createContext<Repositories | null>(null);
+// Nombres de tabla que PowerSync puede reportar (la tabla sincronizable y su gemela local).
+const WATCHED_TABLES = [...SYNCED_TABLES.flatMap((t) => [t.name, `local_${t.name}`]), 'device_settings'];
 
 /** Abre la base local, corre la semilla (idempotente) y recién entonces muestra la app. */
 export function RepositoriesProvider({ children }: { children: ReactNode }) {
@@ -13,16 +16,22 @@ export function RepositoriesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    let stopWatching: (() => void) | undefined;
     (async () => {
       const db = openLocalDatabase();
       await db.waitForReady();
       await seedDatabase(db);
-      if (!cancelled) setRepositories(createRepositories(db));
+      if (cancelled) return;
+      const repos = createRepositories(db);
+      // Cambios que no pasan por los repositorios (p. ej. la sincronización de la Fase 9).
+      stopWatching = db.onChange({ onChange: () => repos.changes.notify() }, { tables: WATCHED_TABLES, throttleMs: 100 });
+      setRepositories(repos);
     })().catch((e: unknown) => {
       if (!cancelled) setError(e instanceof Error ? e : new Error(String(e)));
     });
     return () => {
       cancelled = true;
+      stopWatching?.();
     };
   }, []);
 
@@ -42,12 +51,6 @@ export function RepositoriesProvider({ children }: { children: ReactNode }) {
     );
   }
   return <RepositoriesContext.Provider value={repositories}>{children}</RepositoriesContext.Provider>;
-}
-
-export function useRepositories(): Repositories {
-  const value = useContext(RepositoriesContext);
-  if (!value) throw new Error('useRepositories debe usarse dentro de RepositoriesProvider');
-  return value;
 }
 
 const styles = StyleSheet.create({

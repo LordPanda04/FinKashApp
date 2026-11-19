@@ -22,7 +22,7 @@ afterEach(async () => {
 describe('createRepositories', () => {
   it('expone los seis repositorios', () => {
     expect(Object.keys(createRepositories(db, deps)).sort()).toEqual([
-      'categories', 'debts', 'movements', 'periods', 'settings', 'wallets',
+      'categories', 'changes', 'debts', 'ledger', 'movements', 'periods', 'settings', 'wallets',
     ]);
   });
 
@@ -46,6 +46,38 @@ describe('createRepositories', () => {
     expect(period).toEqual({ start: '2026-11-01', end: '2026-11-20' });
     expect(homeSummary(state, [account.id], period)).toEqual({
       PEN: { availableMinor: 50000, spentMinor: 2450, remainingMinor: 47550 },
+    });
+  });
+
+  describe('notificaciones de cambios', () => {
+    const food = { kind: 'expense', name: 'Comida', color: '#FF0000', icon: 'restaurant' } as const;
+
+    it('una escritura notifica una vez y una lectura no notifica', async () => {
+      const repos = createRepositories(db, deps);
+      const listener = jest.fn();
+      repos.changes.subscribe(listener);
+      await repos.categories.create(food);
+      expect(listener).toHaveBeenCalledTimes(1);
+      await repos.categories.list();
+      await repos.ledger.state();
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('una escritura rechazada por validación también notifica una vez', async () => {
+      const repos = createRepositories(db, deps);
+      const listener = jest.fn();
+      repos.changes.subscribe(listener);
+      const r = await repos.categories.create({ ...food, color: 'rojo' });
+      expect(r.ok).toBe(false);
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('notifica aunque la escritura lance una excepción', async () => {
+      const repos = createRepositories(db, deps);
+      const listener = jest.fn();
+      repos.changes.subscribe(listener);
+      await expect(repos.settings.setDevice({ homeScope: '' })).rejects.toThrow();
+      expect(listener).toHaveBeenCalledTimes(1);
     });
   });
 });
