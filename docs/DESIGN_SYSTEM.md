@@ -259,6 +259,7 @@ Boceto en texto:
   - historial filtrado por esa billetera
   - **"Arreglo de billetera"**
   - **"Ocultar billetera"**
+- **[Usuario]** (2026-11-19, D52) **Cuentas PEN/USD:** el formulario "Nueva billetera" arranca con Soles (`PEN`) seleccionada y deja elegir `PEN`, `USD` o ambas. La grilla "Mis billeteras" **no** muestra subcuentas `USD` inexistentes ni botones para agregarlas. En el Detalle de billetera, si la billetera no tiene cuenta en `USD`, aparece la fila **"Habilitar cuenta en dólares"** (ícono `payments`), que abre una hoja con saldo inicial opcional; es la única forma de agregar `USD` a una billetera existente. Una vez habilitada, la tarjeta muestra los dos saldos.
 - **[Usuario]** Sección **Deudas personales**: "Me deben" y "Debo".
 - **[Propuesta]** "Debo" reutiliza el estilo de la tarjeta "Me deben" con la paleta `danger`, como "Deudas con bancos".
 - **[Propuesta]** "Deudas con bancos" se mantiene para tarjetas de crédito y deudas con instituciones.

@@ -41,7 +41,7 @@ Ninguna en curso. Cerrada la Fase 7C y el cambio de categorías únicas (D47). E
 ## 7. Trabajo pendiente
 - **Verificación visual (usuario):** lista de comprobación de la Fase 6 en `PENDING_TASKS.md`; además, la base real de la Fase 5 (el contador provisional se quitó de Inicio: la base se abre en el arranque; si falla se mostrará "No se pudo abrir la base de datos").
 - **Fase 8:** confirmar el plan `docs/superpowers/plans/2026-11-19-fase8-primer-arranque-y-periodos.md` y ejecutarlo (primer arranque con nombre y "Efectivo", aviso/confirmación/descarte de periodo, "Elegir mes" en Historial); pantallas faltantes de `DESIGN_SYSTEM.md` §8 (Ajustes, inicio de sesión, etc.).
-- Limitación conocida: no se puede agregar una cuenta en USD a una billetera ya creada (afecta a "Efectivo", que nace solo con PEN).
+- D52: la cuenta USD se crea al crear la billetera (eligiendo USD) o desde el detalle de una billetera existente; la grilla no muestra USD inexistentes (Tarea 8 del plan).
 - Config plugin para `cmake.dir`.
 
 ## 8. Siguiente acción recomendada

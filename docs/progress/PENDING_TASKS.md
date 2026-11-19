@@ -79,11 +79,10 @@
 - [ ] Config plugin de Expo para fijar `cmake.dir` (hoy en `android/local.properties`, local).
 - [x] Aprobar D36 (detalles de implementación del dominio; aceptada 2026-11-19).
 - [x] Plan de la Fase 8 redactado: `docs/superpowers/plans/2026-11-19-fase8-primer-arranque-y-periodos.md` (8 tareas). **Espera tu confirmación** (sección "Decisiones de este plan") antes de escribir código.
-- [ ] Agregar una cuenta en USD a una billetera ya creada (hoy no hay forma; "Efectivo" nace solo con PEN, D51).
 
-## Fase 8 (plan redactado; sin código todavía)
-- [ ] Confirmar o corregir las 9 "Decisiones de este plan" (billetera "Efectivo" solo en PEN, primer periodo automático, hoja de nombre con "Omitir", ruta `/periodo`, etc.).
-- [ ] Ejecutar las tareas 1–8 del plan (primer arranque con nombre y "Efectivo", periodos, "Elegir mes" en Historial). Sin módulos nativos nuevos: no hay que recompilar el development build.
+## Fase 8 (plan aprobado por el usuario el 2026-11-19; en ejecución)
+- [x] Decisiones del plan confirmadas; D52 (cuentas PEN/USD) agregada por el usuario.
+- [ ] Ejecutar las tareas 1–9 del plan (primer arranque con nombre y "Efectivo", periodos, "Elegir mes" en Historial, habilitar USD desde el detalle de una billetera). Sin módulos nativos nuevos: no hay que recompilar el development build.
 
 ## Pendientes de diseño
 - [ ] Decidir si el nuevo Registrar (3 opciones) y las pantallas faltantes (`DESIGN_SYSTEM.md` §8) se diseñan antes en Stitch o se construyen con los componentes existentes. Debe estar resuelto antes del plan de interfaz (Fases 6–7).

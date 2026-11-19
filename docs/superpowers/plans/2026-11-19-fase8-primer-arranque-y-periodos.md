@@ -14,13 +14,13 @@
 **Spec:** `docs/FINANCIAL_RULES.md` (§2, §10, §11), `docs/DATABASE_SCHEMA.md` (`device_settings`, "Datos semilla del primer arranque", `financial_periods`), `docs/DESIGN_SYSTEM.md` (§6.1, §10.6, §8 puntos 1 y 12), `docs/progress/DECISIONS.md` (D29, D33, D41, D50, D51).
 
 ## Alcance
-- **Entra:** (A) primer arranque: billetera "Efectivo", primer periodo y nombre del usuario; (B) periodos: aviso en Inicio, confirmación con revisión de saldos, descarte, validación del día de inicio, etiqueta del periodo activo; (C) Historial: elegir cualquier mes.
-- **No entra:** pantalla de Ajustes (el nombre se edita tocando el saludo), reportes de dona/flujo de meses pasados (Inicio sigue mostrando solo el periodo activo), agregar una cuenta en USD a una billetera ya creada, inicio de sesión y sincronización (Fase 9), deudas y tarjetas (Fase 10).
+- **Entra:** (A) primer arranque: billetera "Efectivo", primer periodo y nombre del usuario; (B) periodos: aviso en Inicio, confirmación con revisión de saldos, descarte, validación del día de inicio, etiqueta del periodo activo; (C) Historial: elegir cualquier mes; (D) cuentas PEN/USD (D52): moneda por defecto PEN al crear, y "Habilitar cuenta en dólares" en el detalle de una billetera existente.
+- **No entra:** pantalla de Ajustes (el nombre se edita tocando el saludo), reportes de dona/flujo de meses pasados (Inicio sigue mostrando solo el periodo activo), habilitar una cuenta en PEN en una billetera creada solo con USD (D52 solo define USD), inicio de sesión y sincronización (Fase 9), deudas y tarjetas (Fase 10).
 
 ## Decisiones de este plan (confirmar o corregir)
 Ya aceptadas por ti (D50 y D51): el nombre en el primer arranque con saludo `Hola!, <nombre>` y la billetera "Efectivo" con saldo 0. Lo que sigue son detalles que **no** definiste:
 
-1. **"Efectivo" solo con cuenta en PEN.** Tipo `cash`, ícono `payments`, color `#6B7280`, sin movimiento de apertura (saldo 0). Motivo: con una cuenta en USD, Inicio mostraría desde el primer día un segundo saldo `$ 0.00` y el selector "S/ | $". Limitación: hoy no hay forma de agregar una cuenta USD a una billetera ya creada (queda en `PENDING_TASKS.md`; si guardas dólares en efectivo, crea otra billetera con USD).
+1. **"Efectivo" solo con cuenta en PEN.** Tipo `cash`, ícono `payments`, color `#6B7280`, sin movimiento de apertura (saldo 0). Motivo: con una cuenta en USD, Inicio mostraría desde el primer día un segundo saldo `$ 0.00` y el selector "S/ | $". Para guardar dólares en "Efectivo", se habilita su cuenta USD desde el detalle de la billetera (Tarea 8, D52).
 2. **"Una sola vez" para Efectivo.** Marca `device_settings.default_wallet_seeded`: se crea solo si la marca es falsa **y** no existe ninguna billetera. En instalaciones que ya tienen billeteras (como tu emulador) no se crea nada. Si la ocultas o renombras, no vuelve.
 3. **Primer periodo automático.** En una instalación nueva la semilla crea también el periodo del mes actual ya confirmado (inicio el día 1, sin pantalla de saldos), para que el aviso "Iniciar nuevo periodo" no salte el primer minuto con todo en cero y aparezca recién el mes siguiente. Las instalaciones existentes (sin periodos confirmados) sí verán el aviso de noviembre: sirve para probar el flujo.
 4. **Nombre.** Hoja "¿Cómo te llamas?" sobre Inicio con "Continuar" y "Omitir"; tocar fuera de la hoja equivale a "Omitir". Omitir guarda `''` (no se vuelve a preguntar y el saludo queda "Hola!"). Nombre recortado (sin espacios al borde), máximo 40 caracteres. Se edita tocando el saludo (hoja "Tu nombre"; vaciarlo borra el nombre). Las instalaciones existentes también verán la hoja una vez (su `display_name` es `null`).
@@ -69,7 +69,9 @@ Ya aceptadas por ti (D50 y D51): el nombre en el primer arranque con saludo `Hol
 | `src/features/periodos/PeriodoScreen.tsx` | Confirmación con revisión de saldos |
 | `src/app/periodo.tsx` | Ruta delgada |
 | `src/features/historial/presenter.ts`, `HistorialScreen.tsx` (mod.) | Filtro "Elegir mes…" |
-| `src/test-utils/fakeRepositories.ts` (mod.) | `displayName`, `periods.{shouldSuggest,confirm,dismiss}` falsos |
+| `src/data/repositories/wallets.ts`, `src/data/index.ts` (mod.) | `wallets.addAccount` (y aviso de cambios) |
+| `src/features/billeteras/WalletDetailScreen.tsx`, `EnableUsdForm.tsx` (mod./nuevo) | Fila "Habilitar cuenta en dólares" y su hoja |
+| `src/test-utils/fakeRepositories.ts` (mod.) | `displayName`, `periods.{shouldSuggest,confirm,dismiss}`, `wallets.addAccount` falsos |
 
 Las pruebas van junto a cada archivo (`*.test.ts(x)`).
 
@@ -242,14 +244,37 @@ Las pruebas van junto a cada archivo (`*.test.ts(x)`).
 
 ---
 
-### Task 8: Cierre de la Fase 8
+### Task 8: Cuentas PEN/USD de una billetera (D52)
+
+**Archivos:**
+- Modificar: `src/data/repositories/wallets.ts`, `src/data/index.ts`, `src/features/billeteras/WalletDetailScreen.tsx`, `src/test-utils/fakeRepositories.ts`
+- Crear: `src/features/billeteras/EnableUsdForm.tsx`
+- Probar: `src/data/repositories/wallets.test.ts`, `src/features/billeteras/WalletDetailScreen.test.tsx`, `src/features/billeteras/BilleterasScreen.test.tsx`
+
+**Interfaces:**
+- Produce: `wallets.addAccount(input: { walletId: string; currency: Currency; openingMinor?: number }): Promise<Result<{ account: Account }>>`. Errores: `WALLET_NOT_FOUND`, `ACCOUNT_ALREADY_EXISTS` (la billetera ya tiene cuenta en esa moneda), `AMOUNT_INVALID` (apertura no entera o ≤ 0). Una sola transacción: cuenta y, si se indica, su apertura con fecha de hoy (`buildOpening` + `validateMovement`). Se agrega a las escrituras que notifican en `createRepositories`.
+- Produce: `EnableUsdForm({ walletId, onClose })`: hoja "Habilitar cuenta en dólares" con saldo inicial opcional (`TextField`, prefijo `$`) y botón "Habilitar".
+
+- [ ] **Paso 1: pruebas que fallan:**
+  - repositorio: a una billetera creada solo con PEN, `addAccount({ walletId, currency: 'USD' })` crea la cuenta (una por (billetera, moneda)) y no crea movimientos; con `openingMinor: 5000` crea además una apertura de `5000` en esa cuenta y el saldo derivado es `5000`; repetir la llamada da `ACCOUNT_ALREADY_EXISTS` y no escribe; billetera inexistente da `WALLET_NOT_FOUND`; `openingMinor: 0` o `-1` o `1.5` da `AMOUNT_INVALID` y no deja la cuenta creada (la transacción se revierte).
+  - detalle de billetera: sin cuenta USD aparece la fila "Habilitar cuenta en dólares"; con cuenta USD **no** aparece; tocarla abre la hoja; "Habilitar" con campo vacío llama `addAccount({ walletId, currency: 'USD' })`; con `"100.50"` llama con `openingMinor: 10050`; `"24,50"` muestra el error de `parseAmountInput` y no llama; un error del repositorio se muestra tal cual; dos toques seguidos llaman una sola vez.
+  - lista de billeteras: una billetera solo con PEN muestra un saldo (`S/`), **sin** línea `$` y **sin** ningún botón o texto "USD"/"dólares"; tras habilitar USD la tarjeta muestra los dos saldos.
+  - formulario "Nueva billetera": arranca con `PEN` marcada y `USD` desmarcada; marcar `USD` y desmarcar `PEN` crea una billetera solo con USD (`createWallet` recibe `currencies: ['USD']`); no se puede dejar sin ninguna moneda.
+- [ ] **Paso 2:** correr `npx jest src/data/repositories/wallets.test.ts src/features/billeteras` y ver fallar.
+- [ ] **Paso 3:** implementar `addAccount` (reutiliza `buildOpening`, `validateMovement`, `insertMovementRow`, `loadLedgerState` como `createWallet`), `EnableUsdForm` (bloqueo de doble toque con `ref`) y la fila en `WalletDetailScreen` (dentro de `GroupedList`, solo si `data.accounts` no tiene `currency === 'USD'`). `WalletCard` y `WalletForm` ya cumplen D52; las pruebas lo fijan.
+- [ ] **Paso 4:** `npm test`, `npm run typecheck`, `npx expo lint`.
+- [ ] **Paso 5: commit local** — `feat(billeteras): habilitar cuenta en dólares desde el detalle (D52)`.
+
+---
+
+### Task 9: Cierre de la Fase 8
 
 **Archivos:**
 - Modificar: `docs/progress/{CURRENT_STATUS,COMPLETED_TASKS,PENDING_TASKS,DECISIONS}.md`, `docs/DEVELOPMENT_ROADMAP.md`, `docs/DESIGN_SYSTEM.md` (§8 punto 12 y nueva §10.7 "Periodos"), `docs/FINANCIAL_RULES.md` (§10: primer periodo automático y validación del día de inicio)
 
 - [ ] **Paso 1:** `npm test`, `npm run typecheck`, `npx expo lint` y `npx expo export --platform android --output-dir <carpeta temporal>` en verde (compila todas las rutas, incluida `/periodo`). Pureza: `src/domain/` sin imports prohibidos (`grep` de `react-native|expo|powersync|supabase|@/data`).
 - [ ] **Paso 2:** registrar en `DECISIONS.md` las decisiones de este plan una vez confirmadas (D52 en adelante) y los detalles de implementación que surjan.
-- [ ] **Paso 3:** actualizar los documentos de progreso (las 9 secciones de `CURRENT_STATUS.md`), agregar a `PENDING_TASKS.md` la lista de **verificación visual** (primer arranque con datos limpios: hoja de nombre, "Hola!, <nombre>", "Efectivo" en Billeteras, ausencia del aviso de periodo; instalación existente: aviso de periodo, confirmar con y sin corregir un saldo, "Ahora no", Historial → Elegir mes) y la limitación "agregar cuenta USD a una billetera existente".
+- [ ] **Paso 3:** actualizar los documentos de progreso (las 9 secciones de `CURRENT_STATUS.md`), agregar a `PENDING_TASKS.md` la lista de **verificación visual** (primer arranque con datos limpios: hoja de nombre, "Hola!, <nombre>", "Efectivo" en Billeteras, ausencia del aviso de periodo; instalación existente: aviso de periodo, confirmar con y sin corregir un saldo, "Ahora no", Historial → Elegir mes) y la de cuentas USD (crear una billetera solo en USD; habilitar USD desde el detalle de "Efectivo"; la grilla no muestra USD inexistentes).
 - [ ] **Paso 4: commit local** — `docs: cierre de la Fase 8`.
 
 ---

@@ -13,6 +13,7 @@ Convenciones:
 
 ## 2. Billeteras y cuentas
 - **[Usuario]** Cada billetera (Efectivo, Yape, Plin, BCP…) puede tener hasta **2 cuentas independientes: una en `PEN` y otra en `USD`**.
+- **[Usuario]** (2026-11-19) Al crear una billetera la moneda por defecto es `PEN`, pero el usuario puede elegir `PEN`, `USD` o ambas. Una cuenta `USD` **solo** se crea (a) al crear la billetera eligiendo `USD` o (b) desde el **detalle** de una billetera ya creada ("Habilitar cuenta en dólares"). La lista "Mis billeteras" no muestra cuentas `USD` inexistentes ni botones para agregarlas.
 - **[Usuario]** Al registrar un movimiento, la moneda se hereda de la cuenta de billetera elegida; el usuario nunca elige la moneda por separado.
 - **[Usuario]** Las billeteras **no se eliminan ni se archivan**; solo se pueden **ocultar** en la interfaz. Siguen existiendo en la base de datos y en el historial.
 - **[Usuario]** (2026-11-19) En el primer arranque la app crea automáticamente la billetera **"Efectivo"** con saldo inicial `0` (cuenta en `PEN`), lista para usarse o para recibir su movimiento de apertura. Se crea una sola vez: si el usuario la oculta o renombra, no vuelve a crearse.
