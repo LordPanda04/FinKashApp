@@ -19,7 +19,13 @@ jest.mock('react-native-safe-area-context', () => ({
 const routes = {
   '(tabs)/_layout': TabsLayout,
   '(tabs)/index': Inicio,
-  '(tabs)/historial': Historial,
+  '(tabs)/historial': function HistorialConDatos() {
+    return (
+      <RepositoriesContext.Provider value={createFakeRepositories().repos}>
+        <Historial />
+      </RepositoriesContext.Provider>
+    );
+  },
   '(tabs)/registrar': function RegistrarConDatos() {
     return (
       <RepositoriesContext.Provider value={createFakeRepositories().repos}>
@@ -152,11 +158,15 @@ describe('pantallas', () => {
     expect(screen.queryByRole('header', { name: 'Inicio' })).toBeNull();
   });
 
-  it.each([
-    ['/historial', 'Historial', 'Aquí irá el historial de movimientos.'],
-  ])('%s muestra su título y su estado vacío en español', async (url, title, empty) => {
-    await renderRouter(routes, { initialUrl: url });
-    expect(screen.getByRole('header', { name: title })).toBeOnTheScreen();
-    expect(screen.getByText(empty)).toBeOnTheScreen();
+  it('Historial muestra su título y el mensaje de vacío', async () => {
+    await renderRouter(routes, { initialUrl: '/historial' });
+    expect(screen.getByRole('header', { name: 'Historial' })).toBeOnTheScreen();
+    expect(await screen.findByText('No hay movimientos con estos filtros.')).toBeOnTheScreen();
+  });
+
+  it('Registrar movimiento muestra su título y el control de tres opciones', async () => {
+    await renderRouter(routes, { initialUrl: '/registrar' });
+    expect(screen.getByRole('header', { name: 'Registrar movimiento' })).toBeOnTheScreen();
+    expect(await screen.findByRole('radio', { name: 'Transferencia' })).toBeOnTheScreen();
   });
 });

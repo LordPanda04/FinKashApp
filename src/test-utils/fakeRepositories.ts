@@ -76,12 +76,15 @@ export function createFakeRepositories(
       },
     },
     movements: {
+      // Más recientes primero (como el repositorio real); el orden dentro de un día es el de inserción.
       list: async (filter: { categoryId?: string; accountId?: string } = {}) =>
-        movements.filter(
-          (m) =>
-            (!filter.categoryId || m.categoryId === filter.categoryId) &&
-            (!filter.accountId || m.sourceAccountId === filter.accountId || m.destAccountId === filter.accountId),
-        ),
+        movements
+          .filter(
+            (m) =>
+              (!filter.categoryId || m.categoryId === filter.categoryId) &&
+              (!filter.accountId || m.sourceAccountId === filter.accountId || m.destAccountId === filter.accountId),
+          )
+          .sort((a, b) => (a.occurredOn < b.occurredOn ? 1 : a.occurredOn > b.occurredOn ? -1 : 0)),
       get: async (id: string) => movements.find((m) => m.id === id) ?? null,
       create: async (draft: Omit<Movement, 'id'>) => {
         calls.createMovement(draft);
