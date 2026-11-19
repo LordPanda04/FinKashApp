@@ -1,4 +1,4 @@
-import { activePeriodRange, shouldSuggestNewPeriod, type FinancialPeriod } from './periods';
+import { activePeriodRange, shouldSuggestNewPeriod, validatePeriodStart, type FinancialPeriod } from './periods';
 
 function period(partial: Partial<FinancialPeriod>): FinancialPeriod {
   return { id: 'p', month: '2026-11', startedOn: null, confirmedAt: null, dismissedAt: null, ...partial };
@@ -90,5 +90,38 @@ describe('periodo de diciembre confirmado', () => {
       start: '2026-11-01',
       end: '2026-12-01',
     });
+  });
+});
+
+describe('validatePeriodStart (día de inicio del periodo)', () => {
+  const TODAY = '2026-11-20';
+
+  it('acepta el día 1, un día intermedio y hoy', () => {
+    for (const day of ['2026-11-01', '2026-11-15', '2026-11-20']) {
+      expect(validatePeriodStart('2026-11', day, TODAY)).toEqual({ ok: true, value: day });
+    }
+  });
+
+  it('rechaza un día futuro', () => {
+    const r = validatePeriodStart('2026-11', '2026-11-21', TODAY);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error.code).toBe('PERIOD_START_INVALID');
+      expect(r.error.message).toMatch(/futuro|hoy/i);
+    }
+  });
+
+  it('rechaza un día de otro mes, incluido el último día del mes anterior', () => {
+    for (const day of ['2026-10-31', '2026-12-01']) {
+      const r = validatePeriodStart('2026-11', day, TODAY);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.code).toBe('PERIOD_START_INVALID');
+    }
+  });
+
+  it('rechaza un mes futuro aunque el día sea el 1', () => {
+    const r = validatePeriodStart('2026-12', '2026-12-01', TODAY);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe('PERIOD_START_INVALID');
   });
 });

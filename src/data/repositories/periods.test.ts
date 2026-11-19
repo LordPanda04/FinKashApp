@@ -82,6 +82,51 @@ describe('confirm', () => {
   });
 });
 
+describe('confirm — día de inicio válido', () => {
+  const expectInvalidStart = async (input: { month: string; startedOn?: string }, iso = '2026-11-20T15:00:00Z') => {
+    const r = repo(iso);
+    const c = await r.confirm(input);
+    expect(c.ok).toBe(false);
+    if (!c.ok) expect(c.error.code).toBe('PERIOD_START_INVALID');
+    expect(await r.list()).toEqual([]);
+  };
+
+  it('un día posterior a hoy da PERIOD_START_INVALID y no escribe', async () => {
+    await expectInvalidStart({ month: '2026-11', startedOn: '2026-11-25' });
+  });
+
+  it('un día de otro mes da PERIOD_START_INVALID y no escribe', async () => {
+    await expectInvalidStart({ month: '2026-11', startedOn: '2026-10-31' });
+  });
+
+  it('un mes futuro (inicio por defecto el día 1) da PERIOD_START_INVALID y no escribe', async () => {
+    await expectInvalidStart({ month: '2026-12' });
+  });
+
+  it('un día inexistente como 2026-02-30 da INPUT_INVALID', async () => {
+    const c = await repo('2026-11-20T15:00:00Z').confirm({ month: '2026-02', startedOn: '2026-02-30' });
+    expect(c.ok).toBe(false);
+    if (!c.ok) expect(c.error.code).toBe('INPUT_INVALID');
+  });
+
+  it('hoy como día de inicio es válido y el valor por defecto sigue funcionando', async () => {
+    const r = repo('2026-11-20T15:00:00Z');
+    const c = await r.confirm({ month: '2026-11', startedOn: '2026-11-20' });
+    expect(c.ok && c.value.startedOn).toBe('2026-11-20');
+    expect(await repo('2026-11-20T15:00:00Z').activeRange()).toEqual({ start: '2026-11-20', end: '2026-11-20' });
+  });
+
+  it('un descarte previo no se pierde cuando el inicio es inválido', async () => {
+    const r = repo('2026-11-20T15:00:00Z');
+    await r.dismiss('2026-11');
+    const c = await r.confirm({ month: '2026-11', startedOn: '2026-11-25' });
+    expect(c.ok).toBe(false);
+    const [row] = await r.list();
+    expect(row).toMatchObject({ month: '2026-11', confirmedAt: null });
+    expect(row!.dismissedAt).not.toBeNull();
+  });
+});
+
 describe('dismiss', () => {
   it('descartar el 2/12 oculta la sugerencia ese día y reaparece el 3/12', async () => {
     await repo('2026-11-02T15:00:00Z').confirm({ month: '2026-11' });

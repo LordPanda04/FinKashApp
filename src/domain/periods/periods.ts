@@ -1,5 +1,6 @@
 import { firstDayOfMonth, monthOf, todayInLima, type IsoDate } from '@/lib/dates';
 import type { DateRange } from '@/domain/reports/home';
+import { err, ok, type Result } from '@/lib/result';
 
 export interface FinancialPeriod {
   id: string;
@@ -38,4 +39,18 @@ export function activePeriodRange(periods: FinancialPeriod[], today: IsoDate): D
     .filter((start) => start <= today)
     .sort();
   return { start: starts[starts.length - 1] ?? firstDayOfMonth(today), end: today };
+}
+
+/**
+ * El día de inicio de un periodo debe caer dentro de su mes y no ser posterior a hoy (si fuera futuro,
+ * `activePeriodRange` lo ignoraría). Códigos: `PERIOD_START_INVALID`.
+ */
+export function validatePeriodStart(month: string, startedOn: IsoDate, today: IsoDate): Result<IsoDate> {
+  if (monthOf(startedOn) !== month) {
+    return err('PERIOD_START_INVALID', `El día de inicio debe estar dentro del mes ${month}.`);
+  }
+  if (startedOn > today) {
+    return err('PERIOD_START_INVALID', 'El día de inicio no puede ser posterior a hoy.');
+  }
+  return ok(startedOn);
 }

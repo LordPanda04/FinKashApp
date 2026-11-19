@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import type { LocalDb } from '@/data/local/db';
 import { RowReader } from '@/data/local/ledgerState';
-import { activePeriodRange, shouldSuggestNewPeriod, type FinancialPeriod } from '@/domain/periods/periods';
+import { activePeriodRange, shouldSuggestNewPeriod, validatePeriodStart, type FinancialPeriod } from '@/domain/periods/periods';
 import type { DateRange } from '@/domain/reports/home';
 import { todayInLima, type IsoDate } from '@/lib/dates';
 import { parseOrError, isValidIsoDate } from '@/validation/inputs';
-import { abort, resolveDeps, transact, type RepoDeps } from './shared';
+import { abort, resolveDeps, transact, unwrap, type RepoDeps } from './shared';
 
 type Row = Record<string, unknown>;
 
@@ -69,7 +69,7 @@ export function createPeriodRepository(db: LocalDb, depsIn?: RepoDeps) {
       const { month, startedOn } = parsed.value;
       return transact(db, async (tx) => {
         const stamp = now();
-        const start = startedOn ?? `${month}-01`;
+        const start = unwrap(validatePeriodStart(month, startedOn ?? `${month}-01`, today()));
         const existing = await tx.getOptional<{ id: string; confirmed_at: string | null }>(
           'SELECT id, confirmed_at FROM financial_periods WHERE month = ?',
           [month],
