@@ -32,3 +32,7 @@
   - 320 pruebas en verde, typecheck y lint limpios, `src/domain/` sin dependencias de `src/data` ni de React Native/Expo/PowerSync/Supabase.
   - Development build recompilado con `op-sqlite` (BUILD SUCCESSFUL).
   - **No verificado todavía:** la pantalla provisional con la base real en el emulador (la verificación visual quedó a cargo del usuario).
+- **Fase 6 — Navegación, tokens y base visual** (plan `2026-11-19-fase6-navegacion-y-tokens.md`, tareas 1–3 con commit local; la 4 es este cierre):
+  - T1 tokens de Stitch y fuente Inter con respaldo (`b920edc`), T2 íconos y componentes base de vidrio (`f858406`), T3 barra flotante con "+" elevado y 5 esqueletos de pantalla (`c013568`).
+  - 365 pruebas en verde (29 suites), typecheck y lint limpios; Metro empaqueta sin errores.
+  - **No verificado visualmente** (queda a cargo del usuario, ver `PENDING_TASKS.md`).

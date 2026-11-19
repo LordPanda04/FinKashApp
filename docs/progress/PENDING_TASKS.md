@@ -19,6 +19,19 @@
 - [ ] **Verificación visual (usuario):** abrir la app en el emulador y comprobar que muestra "Categorías: 6 · Movimientos: 0", cerrarla y reabrirla (siguen 6). Si falla, revisar `openLocalDatabase` y las vistas `viewName` de PowerSync.
 - [ ] Confirmar D38–D40.
 
+## Fase 6 (en código; pendiente de tu verificación visual)
+- [x] Plan `2026-11-19-fase6-navegacion-y-tokens.md` ejecutado (tareas 1–3).
+- [ ] **Verificación visual (usuario)** — con `npx expo start` y la app abierta en el emulador:
+  - fondo `#F5F5F7` con círculos suaves de color detrás del contenido;
+  - barra flotante con 5 íconos (inicio, reloj, "+" verde elevado, billetera, cuadrícula), sin texto;
+  - el ítem activo con círculo verde claro; al tocar otro ítem cambia la pestaña;
+  - el "+" abre "Registrar movimiento" con la barra visible;
+  - botón/gesto atrás desde Registrar vuelve a la pestaña anterior;
+  - Inicio empieza con "Hola!" y sin título superior; la letra se ve como Inter;
+  - si cambias algo en `app.json` (ya se cambió `userInterfaceStyle` y se agregó el plugin `expo-font`), recompila con `npx expo run:android --no-bundler`.
+- [ ] Anotar aquí las diferencias con Stitch que veas (no se corrigen en la Fase 6 salvo errores de funcionamiento).
+- [ ] Confirmar D41–D42.
+
 ## Siguiente
 - [ ] Config plugin de Expo para fijar `cmake.dir` (hoy en `android/local.properties`, local).
 - [ ] Aprobar o corregir D36 (detalles de implementación del dominio).
