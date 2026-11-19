@@ -17,7 +17,7 @@
 - **Plan — Tarea 1: inicializar el proyecto Expo** (commit `48fee13`). Plantilla SDK 58, Jest, TypeScript estricto, ESLint y `.gitignore` con `.env*`. Pruebas, typecheck, lint y expo-doctor en verde.
 - **Plan de implementación.** `docs/superpowers/plans/2026-11-17-fundacion-y-dominio.md` (Fases 3–4, 11 tareas); rutas movidas a `src/app/` en la documentación según la plantilla de SDK 58.
 - **Traslado del repo a `C:\dev\finkash`** (rutas más cortas); `npm install` limpio y verificación de pruebas/typecheck tras el traslado.
-- **Plan — Tarea 2 (parcial): `expo-dev-client` y `android.package`** = `com.lordpanda.finkash` (commit `d139451`, D35). El development build **no** pudo compilarse todavía (rutas largas de Ninja, ver `CURRENT_STATUS.md` §6); sigue pendiente su instalación en el emulador.
+- **Plan — Tarea 2 (parcial): `expo-dev-client` y `android.package`** = `com.lordpanda.finkash` (commit `d139451`, D35). Development build compilado e instalado en el emulador tras instalar CMake 3.31.6 (D37).
 - **Plan — Tarea 3: dinero y fechas** (`eb376cf`).
 - **Plan — Tarea 4: tipos del libro y validación de movimientos** (`c476260`).
 - **Plan — Tarea 5: saldos y saldos diarios** (`041bc90`).
