@@ -92,6 +92,16 @@ describe('Screen', () => {
     });
   });
 
+  it('con backdrop dibuja el fondo ambiental', async () => {
+    await render(<Screen backdrop="plin"><Text>a</Text></Screen>);
+    expect(screen.getByTestId('ambient-backdrop')).toBeOnTheScreen();
+  });
+
+  it('sin backdrop no dibuja fondo ambiental', async () => {
+    await render(<Screen><Text>b</Text></Screen>);
+    expect(screen.queryByTestId('ambient-backdrop')).toBeNull();
+  });
+
   it('sin título no dibuja encabezado', async () => {
     await render(<Screen><Text>contenido</Text></Screen>);
     expect(screen.queryByRole('header')).toBeNull();
