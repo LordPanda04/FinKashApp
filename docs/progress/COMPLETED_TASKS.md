@@ -40,3 +40,7 @@
   - T1 notificador de cambios, repositorio `ledger` y `useQuery` (`4c0505f`), T2 componentes de lista, formulario y hojas (`d7eeb19`), T3 pantalla de Categorías (`8f9e960`), T4 pantalla de Billeteras con deudas y tarjetas (`6d61762`), T5 detalle de billetera y arreglo de saldo (`ba7ec71`).
   - 472 pruebas en verde (39 suites), typecheck y lint limpios; Metro empaqueta sin errores.
   - **No verificado visualmente** (a cargo del usuario, ver `PENDING_TASKS.md`).
+- **Fase 7B — Registrar movimiento e Historial** (plan `2026-11-19-fase7b-registrar-e-historial.md`, tareas 1–5 con commit local; la 6 es este cierre):
+  - T1 fechas del Historial y deuda nueva atómica (`9e267e4`), T2 componentes (`e5735fb`), T3 Registrar (`940e701`), T4 Historial (`7cd1e2a`), T5 editar y eliminar movimientos (`aae3081`).
+  - 617 pruebas en verde (46 suites), typecheck y lint limpios; `expo export` de Android correcto (todas las pantallas compilan).
+  - **No verificado visualmente** (a cargo del usuario, ver `PENDING_TASKS.md`).

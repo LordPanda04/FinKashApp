@@ -42,10 +42,27 @@
 - [ ] Anotar aquí las diferencias con Stitch que veas.
 - [ ] Confirmar D43–D44.
 
+## Fase 7B (en código; pendiente de tu verificación visual)
+- [x] Plan `2026-11-19-fase7b-registrar-e-historial.md` ejecutado (tareas 1–5).
+- [ ] **Verificación visual (usuario)** — con `npx expo start` y la app abierta en el emulador (ver "Cómo ver los cambios" abajo):
+  - Registrar: un gasto con categoría y billetera; un ingreso; una transferencia entre dos billeteras (y ver los saldos en Billeteras); el prefijo cambia de "S/" a "$" con una cuenta en dólares; desactivar "¿Es de hoy?" y elegir otro día en el calendario.
+  - Un gasto mayor al saldo: aviso "Saldo insuficiente" con el día y el faltante, y la sugerencia de registrar antes un ingreso "Otros".
+  - "Préstamo": elegir una deuda existente y probar "+ Nueva deuda"; verla en Billeteras → "Me deben" (o "Debo").
+  - Desde el detalle de una billetera, "Transferir" llega a Registrar en modo Transferencia con "Desde" elegida.
+  - Historial: grupos Hoy/Ayer/fecha sin hora; filtros Fecha, Categoría y Billetera; el lápiz muestra "Editar" y "Eliminar"; editar un movimiento (incluido mover la fecha antes del ingreso que lo cubría: debe bloquearse) y eliminar uno (también uno bloqueado por saldo).
+- [ ] Anotar aquí las diferencias con Stitch que veas.
+- [ ] Confirmar D45–D46.
+
+### Cómo ver los cambios en el emulador
+1. Abrir el emulador `Medium_Phone_API_37.0` (Android Studio → Device Manager, o `emulator -avd Medium_Phone_API_37.0`).
+2. En una terminal, en `C:\dev\finkash`: `npx expo start` (un solo Metro; si el 8081 está ocupado, cerrar el anterior).
+3. Abrir la app "finkash" en el emulador (o pulsar `a` en la terminal de Expo). Los cambios de JavaScript/TypeScript se ven solos (Fast Refresh) mientras Metro está abierto.
+4. Los cambios nativos (`app.json`, nuevos módulos nativos) requieren recompilar: `npx expo run:android --no-bundler`.
+
 ## Siguiente
 - [ ] Config plugin de Expo para fijar `cmake.dir` (hoy en `android/local.properties`, local).
 - [ ] Aprobar o corregir D36 (detalles de implementación del dominio).
-- [ ] Plan 7B (Registrar movimiento + Historial) y luego 7C (Inicio con gráficos).
+- [ ] Plan 7C (Inicio con resumen, selector de alcance, dona y gráfico de flujo).
 
 ## Pendientes de diseño
 - [ ] Decidir si el nuevo Registrar (3 opciones) y las pantallas faltantes (`DESIGN_SYSTEM.md` §8) se diseñan antes en Stitch o se construyen con los componentes existentes. Debe estar resuelto antes del plan de interfaz (Fases 6–7).
