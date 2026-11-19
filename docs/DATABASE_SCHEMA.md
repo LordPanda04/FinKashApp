@@ -152,6 +152,14 @@ Restricción: único `(user_id, currency, wallet_id)`.
 | hide_amounts | ojo abierto/cerrado de Inicio |
 | show_projection | switch de saldo proyectado |
 | home_scope | `general` o el `wallet_id` elegido en Inicio |
+| display_name | text null; nombre para el saludo `Hola!, <nombre>` (D50). `null` = aún no se pidió el nombre; `''` = el usuario eligió omitirlo |
+| default_wallet_seeded | boolean, default `false`; `true` cuando ya se evaluó la billetera inicial "Efectivo" (D51), para no volver a crearla |
+
+## Datos semilla del primer arranque (idempotentes, se evalúan en cada arranque)
+- Categorías: "Otros", "Préstamo" y "Devolución / Reembolso" (una sola de cada una).
+- Ajustes del dispositivo: una fila de `device_settings` con los valores por defecto.
+- Billetera **"Efectivo"** (D51): `wallet_type = cash`, ícono `payments`, color `#6B7280`, `include_in_general = true`, una cuenta en `PEN` y **ningún** movimiento de apertura (saldo derivado 0). Se crea solo si `default_wallet_seeded = false` y no existe ninguna billetera; en cualquier caso la marca pasa a `true`.
+- Con la sincronización (Fase 9), la semilla no debe duplicar datos al iniciar sesión en un dispositivo cuya cuenta ya tiene billeteras.
 
 ## Cálculos derivados (no se almacenan)
 - Saldo de una cuenta = Σ `amount_minor` donde `dest_account_id` = cuenta − Σ `amount_minor` donde `source_account_id` = cuenta.

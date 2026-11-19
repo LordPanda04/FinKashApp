@@ -17,7 +17,7 @@
 ## Fase 5 (cerrada, con un pendiente)
 - [x] Plan `2026-11-19-fase5-base-local-y-repositorios.md` ejecutado (10 tareas).
 - [ ] **Verificación visual (usuario):** abrir la app en el emulador y comprobar que muestra "Categorías: 6 · Movimientos: 0", cerrarla y reabrirla (siguen 6). Si falla, revisar `openLocalDatabase` y las vistas `viewName` de PowerSync.
-- [ ] Confirmar D38–D40.
+- [x] Confirmar D38–D40 (aceptadas 2026-11-19).
 
 ## Fase 6 (en código; pendiente de tu verificación visual)
 - [x] Plan `2026-11-19-fase6-navegacion-y-tokens.md` ejecutado (tareas 1–3).
@@ -30,7 +30,7 @@
   - Inicio empieza con "Hola!" y sin título superior; la letra se ve como Inter;
   - si cambias algo en `app.json` (ya se cambió `userInterfaceStyle` y se agregó el plugin `expo-font`), recompila con `npx expo run:android --no-bundler`.
 - [ ] Anotar aquí las diferencias con Stitch que veas (no se corrigen en la Fase 6 salvo errores de funcionamiento).
-- [ ] Confirmar D41–D42.
+- [x] Confirmar D41–D42 (aceptadas 2026-11-19; D41 ajustada por D50: nombre en el primer arranque).
 
 ## Fase 7A (en código; pendiente de tu verificación visual)
 - [x] Plan `2026-11-19-fase7a-categorias-y-billeteras.md` ejecutado (tareas 1–5).
@@ -40,7 +40,7 @@
   - Detalle: saldos, movimientos de esa billetera, "Arreglo de billetera" (probar con saldo real 0 y con un valor distinto), "Ocultar billetera" (con confirmación) y que aparezca en "Billeteras ocultas" al volver; "Transferir" abre Registrar (aún esqueleto).
   - Cerrar y reabrir la app: los datos siguen ahí (base real de PowerSync).
 - [ ] Anotar aquí las diferencias con Stitch que veas.
-- [ ] Confirmar D43–D44.
+- [x] Confirmar D43–D44 (aceptadas 2026-11-19).
 
 ## Fase 7B (en código; pendiente de tu verificación visual)
 - [x] Plan `2026-11-19-fase7b-registrar-e-historial.md` ejecutado (tareas 1–5).
@@ -51,7 +51,7 @@
   - Desde el detalle de una billetera, "Transferir" llega a Registrar en modo Transferencia con "Desde" elegida.
   - Historial: grupos Hoy/Ayer/fecha sin hora; filtros Fecha, Categoría y Billetera; el lápiz muestra "Editar" y "Eliminar"; editar un movimiento (incluido mover la fecha antes del ingreso que lo cubría: debe bloquearse) y eliminar uno (también uno bloqueado por saldo).
 - [ ] Anotar aquí las diferencias con Stitch que veas.
-- [ ] Confirmar D45–D46.
+- [x] Confirmar D45–D46 (aceptadas 2026-11-19).
 
 ### Cómo ver los cambios en el emulador
 1. Abrir el emulador `Medium_Phone_API_37.0` (Android Studio → Device Manager, o `emulator -avd Medium_Phone_API_37.0`).
@@ -73,12 +73,17 @@
   - en una instalación sin billeteras: "Crea tu primera billetera".
 - [ ] **Categorías únicas (D47):** al abrir la app se fusionan las categorías repetidas de la versión anterior; comprobar que Categorías muestra una sola "Otros", "Préstamo" y "Devolución / Reembolso", que los movimientos antiguos siguen con su categoría, y que no se ve "Gasto/Ingreso" en ninguna categoría.
 - [ ] Anotar aquí las diferencias con Stitch que veas.
-- [ ] Confirmar D48–D49 (y las decisiones D36, D38–D44 aún pendientes).
+- [x] Confirmar D48–D49 (aceptadas 2026-11-19, junto con D36 y D38–D44).
 
 ## Siguiente
 - [ ] Config plugin de Expo para fijar `cmake.dir` (hoy en `android/local.properties`, local).
-- [ ] Aprobar o corregir D36 (detalles de implementación del dominio).
-- [ ] Plan de la Fase 8 (periodos: sugerencia, confirmación y descarte).
+- [x] Aprobar D36 (detalles de implementación del dominio; aceptada 2026-11-19).
+- [x] Plan de la Fase 8 redactado: `docs/superpowers/plans/2026-11-19-fase8-primer-arranque-y-periodos.md` (8 tareas). **Espera tu confirmación** (sección "Decisiones de este plan") antes de escribir código.
+- [ ] Agregar una cuenta en USD a una billetera ya creada (hoy no hay forma; "Efectivo" nace solo con PEN, D51).
+
+## Fase 8 (plan redactado; sin código todavía)
+- [ ] Confirmar o corregir las 9 "Decisiones de este plan" (billetera "Efectivo" solo en PEN, primer periodo automático, hoja de nombre con "Omitir", ruta `/periodo`, etc.).
+- [ ] Ejecutar las tareas 1–8 del plan (primer arranque con nombre y "Efectivo", periodos, "Elegir mes" en Historial). Sin módulos nativos nuevos: no hay que recompilar el development build.
 
 ## Pendientes de diseño
 - [ ] Decidir si el nuevo Registrar (3 opciones) y las pantallas faltantes (`DESIGN_SYSTEM.md` §8) se diseñan antes en Stitch o se construyen con los componentes existentes. Debe estar resuelto antes del plan de interfaz (Fases 6–7).

@@ -3,10 +3,10 @@
 Última actualización: 2026-11-19 (cierre de la Fase 7C en código; Fase 7 completa)
 
 ## 1. Fase de desarrollo actual
-Fases 3 a 7 completas en código (7C = Inicio). Esperan tu **verificación visual** las Fases 5, 6, 7A, 7B y 7C (listas en `PENDING_TASKS.md`; antes, recompilar el development build por `react-native-svg`). Siguiente: **Fase 8** (periodos).
+Fases 3 a 7 completas en código (7C = Inicio). Esperan tu **verificación visual** las Fases 5, 6, 7A, 7B y 7C (listas en `PENDING_TASKS.md`; antes, recompilar el development build por `react-native-svg`). Siguiente: **Fase 8** (primer arranque con nombre y "Efectivo" + periodos): plan redactado, **a la espera de tu confirmación**.
 
 ## 2. Tarea actual
-Ninguna en curso. Cerrada la Fase 7C (plan `2026-11-19-fase7c-inicio.md`, un commit local por tarea) y el cambio de categorías únicas (D47). Falta tu verificación visual y redactar el plan de la Fase 8.
+Ninguna en curso. Cerrada la Fase 7C y el cambio de categorías únicas (D47). El 2026-11-19 se aceptaron D36, D38–D44, D48 y D49, se registraron D50 (nombre `Hola!, <nombre>`) y D51 (billetera "Efectivo" por defecto), se actualizaron los documentos y se redactó el plan `2026-11-19-fase8-primer-arranque-y-periodos.md` (sin código todavía).
 
 ## 3. Trabajo completado
 - Dominio (Fase 4): dinero, fechas, validación de movimientos, saldos, deudas, validación en el tiempo (`checkChange`), apertura y arreglo, reportes de Inicio, periodos, categorías.
@@ -18,7 +18,7 @@ Ninguna en curso. Cerrada la Fase 7C (plan `2026-11-19-fase7c-inicio.md`, un com
 - Fase 7B: Registrar movimiento (gasto, ingreso, transferencia, fecha, préstamo con deuda existente o nueva atómica, aviso de saldo insuficiente), Historial (grupos por día sin hora, filtros, modo de edición) y edición/eliminación de movimientos con validación de saldo en el tiempo.
 - Categorías únicas sin tipo (D47) con fusión automática de duplicados al arrancar.
 - Fase 7C: geometría de gráficos, presentador de Inicio, componentes (resumen con selector de alcance, ojo y proyección; dona; flujo con umbral) y la pantalla de Inicio con ajustes persistentes en `device_settings`.
-- Decisiones D32–D49 registradas (D45–D47 aceptadas; D36, D38–D44 y D48–D49 pendientes de confirmación).
+- Decisiones D32–D51 registradas y aceptadas (D50 y D51: instrucciones del usuario del 2026-11-19; los detalles de interfaz de la Fase 8 están en el plan, pendientes de confirmar).
 
 ## 4. Archivos creados o modificados
 - `src/data/{local,repositories}/*`, `src/data/{index,RepositoriesProvider}`, `src/validation/inputs.ts`, `src/lib/id.ts`, `jest.setup.ts`.
@@ -40,11 +40,12 @@ Ninguna en curso. Cerrada la Fase 7C (plan `2026-11-19-fase7c-inicio.md`, un com
 
 ## 7. Trabajo pendiente
 - **Verificación visual (usuario):** lista de comprobación de la Fase 6 en `PENDING_TASKS.md`; además, la base real de la Fase 5 (el contador provisional se quitó de Inicio: la base se abre en el arranque; si falla se mostrará "No se pudo abrir la base de datos").
-- Plan de la Fase 8 (sugerencia, confirmación y descarte de periodo mensual); pantallas faltantes de `DESIGN_SYSTEM.md` §8 (Ajustes, inicio de sesión, etc.).
-- Confirmar D36, D38–D44 y D48–D49; config plugin para `cmake.dir`.
+- **Fase 8:** confirmar el plan `docs/superpowers/plans/2026-11-19-fase8-primer-arranque-y-periodos.md` y ejecutarlo (primer arranque con nombre y "Efectivo", aviso/confirmación/descarte de periodo, "Elegir mes" en Historial); pantallas faltantes de `DESIGN_SYSTEM.md` §8 (Ajustes, inicio de sesión, etc.).
+- Limitación conocida: no se puede agregar una cuenta en USD a una billetera ya creada (afecta a "Efectivo", que nace solo con PEN).
+- Config plugin para `cmake.dir`.
 
 ## 8. Siguiente acción recomendada
-Recompilar el development build, verificar las pantallas en el emulador (lista en `PENDING_TASKS.md`) y pedir el plan de la Fase 8.
+Revisar y confirmar (o corregir) las "Decisiones de este plan" de la Fase 8; después ejecutar el plan. En paralelo, recompilar el development build (por `react-native-svg`) y verificar las pantallas en el emulador (lista en `PENDING_TASKS.md`).
 
 ## 9. Configuración o preparación externa pendiente
 - Más adelante: cuenta de Expo + EAS CLI (Fase 11); proyecto de desarrollo en Supabase y cuenta de PowerSync (Fase 9).

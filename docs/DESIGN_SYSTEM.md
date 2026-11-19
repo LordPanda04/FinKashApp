@@ -136,7 +136,7 @@ Tamaños: 24 px en la barra (28 px el "+"), 20 px en círculos, 18 px en accione
 ## 6. Pantallas
 
 ### 6.1 Inicio
-1. Saludo "Hola, Leonardo!" (`headline-lg`), sin título de pantalla.
+1. Saludo (`headline-lg`), sin título de pantalla. Stitch muestra "Hola, Leonardo!"; **por instrucción del usuario (2026-11-19, D50) el formato es `Hola!, <nombre>`**, con el nombre pedido en el primer arranque (§10.6).
 2. Tarjeta **"Gastos del mes"**: píldora con el mes ("Noviembre"), dona por categoría con "Total gastado" y el monto al centro, leyenda con la categoría seleccionada resaltada.
 3. Tarjeta **"Flujo del mes"**: variación neta arriba a la derecha ("+ S/ 1,015.50" en verde), gráfico de línea con línea de umbral "Límite: S/ 300.00" y eje X del 1 al 30 del mes.
 
@@ -187,7 +187,7 @@ Tamaños: 24 px en la barra (28 px el "+"), 20 px en círculos, 18 px en accione
 
 ## 8. Pantallas e interacciones faltantes en Stitch (no inventar; diseñarlas en Stitch o acordarlas)
 Con los ajustes del 2026-11-17, la lista queda así (✳️ = ahora definida a nivel funcional en §10, aún sin diseño visual en Stitch):
-1. Inicio de sesión y registro (opcionales, la app funciona sin cuenta) y onboarding.
+1. Inicio de sesión y registro (opcionales, la app funciona sin cuenta) y onboarding (✳️ el paso del nombre en el primer arranque está definido en §10.6; falta el resto).
 2. Selector de categoría y selector de billetera/cuenta (desde Registrar).
 3. ✳️ Selector de fecha (calendario al desactivar "¿Es de hoy?").
 4. ✳️ Formulario de transferencia entre mis billeteras (§10.3).
@@ -307,3 +307,9 @@ Boceto en texto:
 - **[Usuario]** (2026-11-19) Las categorías **no muestran ni tienen tipo** (gasto/ingreso): hay una sola "Otros", una sola "Préstamo", etc. El tipo se elige al registrar el movimiento.
 - **[Propuesta]** En las filas de las categorías de sistema ("Otros" y "Préstamo") no aparece el botón eliminar.
 - **[Propuesta]** Al eliminar otra categoría se pide confirmación indicando cuántos movimientos pasarán a "Otros".
+
+### 10.6 Primer arranque: nombre y billetera "Efectivo" (2026-11-19, D50 y D51)
+- **[Usuario]** Si no hay nombre guardado (primer arranque), se pide el nombre para el saludo `Hola!, <nombre>` de Inicio. Se guarda en los ajustes locales del dispositivo y se puede editar después.
+- **[Usuario]** La billetera **"Efectivo"** ya existe al abrir la app por primera vez (saldo 0); Inicio no muestra "Crea tu primera billetera" porque ya hay una.
+- **[Propuesta]** El nombre se pide en una hoja inferior de vidrio ("¿Cómo te llamas?") con un `TextField`, el CTA "Continuar" y la acción secundaria "Omitir" (el saludo queda en "Hola!"). Sin diseño en Stitch: se construye con `BottomSheet`, `TextField` y `PrimaryButton`.
+- **[Propuesta]** Para editarlo, se toca el saludo de Inicio y se abre la misma hoja con el título "Tu nombre" (no existe aún una pantalla de Ajustes, §8 punto 13).

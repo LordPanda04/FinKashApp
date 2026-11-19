@@ -15,6 +15,7 @@ Convenciones:
 - **[Usuario]** Cada billetera (Efectivo, Yape, Plin, BCP…) puede tener hasta **2 cuentas independientes: una en `PEN` y otra en `USD`**.
 - **[Usuario]** Al registrar un movimiento, la moneda se hereda de la cuenta de billetera elegida; el usuario nunca elige la moneda por separado.
 - **[Usuario]** Las billeteras **no se eliminan ni se archivan**; solo se pueden **ocultar** en la interfaz. Siguen existiendo en la base de datos y en el historial.
+- **[Usuario]** (2026-11-19) En el primer arranque la app crea automáticamente la billetera **"Efectivo"** con saldo inicial `0` (cuenta en `PEN`), lista para usarse o para recibir su movimiento de apertura. Se crea una sola vez: si el usuario la oculta o renombra, no vuelve a crearse.
 - **[Propuesta]** Una billetera oculta no aparece en los selectores ni en el "Saldo general"; sus movimientos sí aparecen en el Historial. Para volver a usarla hay que mostrarla de nuevo.
 - **[Propuesta]** La selección de billeteras del "Saldo general" en Inicio (§9) reemplaza la clasificación "disponible / ahorro" del requisito original: una billetera de ahorro simplemente se deja sin marcar.
 
