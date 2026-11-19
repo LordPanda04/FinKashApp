@@ -76,6 +76,19 @@ const INTER: Record<FontWeight, string> = {
   '700': 'Inter_700Bold',
 };
 
+/** Sombras de Stitch (`boxShadow` de React Native; la interior marca el borde superior de vidrio). */
+export const shadows = {
+  glass: [
+    { offsetX: 0, offsetY: 8, blurRadius: 32, color: 'rgba(29,29,31,0.06)' },
+    { offsetX: 0, offsetY: 1, blurRadius: 0, color: 'rgba(255,255,255,0.9)', inset: true },
+  ],
+  glassSm: [
+    { offsetX: 0, offsetY: 4, blurRadius: 16, color: 'rgba(29,29,31,0.04)' },
+    { offsetX: 0, offsetY: 1, blurRadius: 0, color: 'rgba(255,255,255,0.85)', inset: true },
+  ],
+  fab: [{ offsetX: 0, offsetY: 8, blurRadius: 20, color: 'rgba(28,156,77,0.35)' }],
+} as const;
+
 /** Familia Inter para el peso pedido; `undefined` (fuente del sistema) si Inter no cargó. */
 export function fontFamilyFor(weight: FontWeight, interLoaded: boolean): string | undefined {
   return interLoaded ? INTER[weight] : undefined;
