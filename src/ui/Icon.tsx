@@ -14,7 +14,7 @@ export type IconName =
   | 'local_cafe' | 'savings' | 'fitness_center' | 'work' | 'checkroom' | 'local_gas_station'
   | 'child_care' | 'card_giftcard' | 'wifi'
   | 'visibility' | 'visibility_off' | 'swap_horiz' | 'tune' | 'handshake' | 'arrow_back'
-  | 'check' | 'close' | 'expand_less' | 'person';
+  | 'check' | 'close' | 'expand_less' | 'person' | 'chevron_left' | 'error' | 'info';
 
 export function Icon({
   name,
