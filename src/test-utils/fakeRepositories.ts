@@ -143,6 +143,12 @@ export function createFakeRepositories(
       getDevice: async () => device,
       setDevice: async (patch: Partial<typeof device>) => {
         calls.setDevice(patch);
+        if (typeof patch.displayName === 'string') {
+          // Imita la validación del repositorio real: recorta y limita a 40 caracteres.
+          const trimmed = patch.displayName.trim();
+          if (trimmed.length > 40) throw new Error('El nombre puede tener hasta 40 caracteres.');
+          patch = { ...patch, displayName: trimmed };
+        }
         device = { ...device, ...patch };
         changes.notify();
       },

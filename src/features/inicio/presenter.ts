@@ -13,6 +13,12 @@ import {
 import { MONTH_NAMES_ES, type IsoDate } from '@/lib/dates';
 import { colors } from '@/ui/tokens';
 
+/** Saludo de Inicio (D50): `Hola!, <nombre>`; sin nombre (o solo espacios), `Hola!`. */
+export function greetingText(name: string | null): string {
+  const trimmed = name?.trim() ?? '';
+  return trimmed === '' ? 'Hola!' : `Hola!, ${trimmed}`;
+}
+
 /** `'general'` (Saldo general) o el id de una billetera. */
 export type Scope = 'general' | string;
 

@@ -1,7 +1,8 @@
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { ZodError } from 'zod';
 import { useRepositories } from '@/data/RepositoriesContext';
 import { useQuery } from '@/data/useQuery';
 import { parseAmountInput, type Currency } from '@/domain/money/money';
@@ -15,7 +16,8 @@ import { SegmentedControl } from '@/ui/SegmentedControl';
 import { colors } from '@/ui/tokens';
 import { ExpensesCard } from './ExpensesCard';
 import { FlowCard } from './FlowCard';
-import { buildHomeView } from './presenter';
+import { NameSheet } from './NameSheet';
+import { buildHomeView, greetingText } from './presenter';
 import { ScopeSheet } from './ScopeSheet';
 import { SummaryCard } from './SummaryCard';
 import { ThresholdSheet } from './ThresholdSheet';
@@ -27,6 +29,7 @@ export function InicioScreen({ today: todayProp }: { today?: IsoDate }) {
   const today = todayProp ?? todayInLima(new Date());
   const [scopeOpen, setScopeOpen] = useState(false);
   const [thresholdOpen, setThresholdOpen] = useState(false);
+  const [nameEditOpen, setNameEditOpen] = useState(false);
   const [chartCurrency, setChartCurrency] = useState<Currency>('PEN');
 
   const { data, error } = useQuery(async (r) => ({
@@ -39,30 +42,48 @@ export function InicioScreen({ today: todayProp }: { today?: IsoDate }) {
     thresholds: await r.settings.listThresholds(),
   }));
 
-  const greeting = (
-    <AppText variant="headlineLg" color={colors.onBackground}>
-      Hola!
+  // Mientras no hay datos el saludo es "Hola!" y no se puede tocar (todavía no se sabe el nombre).
+  const plainGreeting = (
+    <AppText variant="headlineLg" color={colors.onBackground} numberOfLines={1}>
+      {greetingText(null)}
     </AppText>
   );
 
   if (error && !data) {
     return (
       <Screen backdrop="primary">
-        {greeting}
+        {plainGreeting}
         <AppText variant="bodyMd" color={colors.danger}>
           No se pudo leer tu información.
         </AppText>
       </Screen>
     );
   }
-  if (!data) return <Screen backdrop="primary">{greeting}</Screen>;
+  if (!data) return <Screen backdrop="primary">{plainGreeting}</Screen>;
 
   const { device } = data;
+  const greeting = (
+    <Pressable accessibilityRole="button" accessibilityLabel="Editar tu nombre" onPress={() => setNameEditOpen(true)}>
+      <AppText variant="headlineLg" color={colors.onBackground} numberOfLines={1}>
+        {greetingText(device.displayName)}
+      </AppText>
+    </Pressable>
+  );
   // Un alcance guardado que ya no existe vuelve a Saldo general.
   const scope = data.wallets.some((w) => w.id === device.homeScope) ? device.homeScope : 'general';
   const view = buildHomeView({ ...data, today, scope });
   const currency: Currency = view.currencies.includes(chartCurrency) ? chartCurrency : (view.currencies[0] ?? 'PEN');
   const thresholdMinor = view.blocks[currency]?.thresholdMinor ?? null;
+
+  async function saveName(name: string): Promise<string | null> {
+    try {
+      await settings.setDevice({ displayName: name });
+      return null;
+    } catch (e) {
+      // El repositorio valida con Zod: se muestra su primer mensaje, no el JSON completo.
+      return e instanceof ZodError ? (e.issues[0]?.message ?? 'El nombre no es válido.') : e instanceof Error ? e.message : 'No se pudo guardar el nombre.';
+    }
+  }
 
   async function saveThreshold(text: string): Promise<string | null> {
     const amount = parseAmountInput(text);
@@ -135,6 +156,12 @@ export function InicioScreen({ today: todayProp }: { today?: IsoDate }) {
         onToggleInclude={(id, include) => walletsRepo.setIncludeInGeneral(id, include)}
         onClose={() => setScopeOpen(false)}
       />
+      {device.displayName === null ? (
+        <NameSheet visible mode="welcome" initialName="" onSave={saveName} onSkip={() => settings.setDevice({ displayName: '' })} onClose={() => undefined} />
+      ) : null}
+      {nameEditOpen ? (
+        <NameSheet visible mode="edit" initialName={device.displayName ?? ''} onSave={saveName} onClose={() => setNameEditOpen(false)} />
+      ) : null}
       {thresholdOpen ? (
         <ThresholdSheet
           visible

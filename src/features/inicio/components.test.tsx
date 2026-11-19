@@ -4,6 +4,7 @@ import { DonutChart } from '@/ui/charts/DonutChart';
 import { FlowLineChart } from '@/ui/charts/FlowLineChart';
 import { ExpensesCard } from './ExpensesCard';
 import { FlowCard } from './FlowCard';
+import { NameSheet } from './NameSheet';
 import type { CurrencyBlock, HomeView } from './presenter';
 import { ScopeSheet } from './ScopeSheet';
 import { SummaryCard } from './SummaryCard';
@@ -262,6 +263,89 @@ describe('ThresholdSheet', () => {
     await fireEvent.press(save);
     await new Promise((r) => setTimeout(r, 80));
     expect(onSave).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('NameSheet', () => {
+  const sheet = (over: Partial<React.ComponentProps<typeof NameSheet>> = {}) => (
+    <NameSheet visible mode="welcome" initialName="" onSave={jest.fn().mockResolvedValue(null)} onSkip={jest.fn()} onClose={jest.fn()} {...over} />
+  );
+
+  it('bienvenida: pregunta "¿Cómo te llamas?" y ofrece Continuar y Omitir', async () => {
+    await render(sheet());
+    expect(screen.getByText('¿Cómo te llamas?')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Continuar' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Omitir' })).toBeOnTheScreen();
+  });
+
+  it('bienvenida: con el campo vacío o solo espacios muestra el aviso y no guarda', async () => {
+    const onSave = jest.fn();
+    await render(sheet({ onSave }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Continuar' }));
+    expect(await screen.findByText('Escribe tu nombre u omite este paso.')).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByLabelText('Nombre'), '   ');
+    await fireEvent.press(screen.getByRole('button', { name: 'Continuar' }));
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('bienvenida: Continuar guarda el nombre recortado y cierra', async () => {
+    const onSave = jest.fn().mockResolvedValue(null);
+    const onClose = jest.fn();
+    await render(sheet({ onSave, onClose }));
+    await fireEvent.changeText(screen.getByLabelText('Nombre'), '  Ana ');
+    await fireEvent.press(screen.getByRole('button', { name: 'Continuar' }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    expect(onSave).toHaveBeenCalledWith('Ana');
+  });
+
+  it('un error devuelto por onSave se muestra y la hoja no se cierra', async () => {
+    const onSave = jest.fn().mockResolvedValue('El nombre puede tener hasta 40 caracteres.');
+    const onClose = jest.fn();
+    await render(sheet({ onSave, onClose }));
+    await fireEvent.changeText(screen.getByLabelText('Nombre'), 'Ana');
+    await fireEvent.press(screen.getByRole('button', { name: 'Continuar' }));
+    expect(await screen.findByText('El nombre puede tener hasta 40 caracteres.')).toBeOnTheScreen();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('bienvenida: Omitir llama onSkip y tocar fuera de la hoja equivale a omitir', async () => {
+    const onSkip = jest.fn();
+    await render(sheet({ onSkip }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Omitir' }));
+    expect(onSkip).toHaveBeenCalledTimes(1);
+    await fireEvent.press(screen.getByTestId('sheet-backdrop'));
+    expect(onSkip).toHaveBeenCalledTimes(2);
+  });
+
+  it('doble toque en Continuar guarda una sola vez', async () => {
+    const onSave = jest.fn().mockImplementation(() => new Promise<null>((resolve) => setTimeout(() => resolve(null), 30)));
+    await render(sheet({ onSave }));
+    await fireEvent.changeText(screen.getByLabelText('Nombre'), 'Ana');
+    const button = screen.getByRole('button', { name: 'Continuar' });
+    await fireEvent.press(button);
+    await fireEvent.press(button);
+    await new Promise((r) => setTimeout(r, 80));
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
+  it('edición: título "Tu nombre", parte del nombre actual, sin Omitir; vaciar y guardar manda ""', async () => {
+    const onSave = jest.fn().mockResolvedValue(null);
+    await render(sheet({ mode: 'edit', initialName: 'Ana', onSave }));
+    expect(screen.getByText('Tu nombre')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Nombre').props.value).toBe('Ana');
+    expect(screen.queryByRole('button', { name: 'Omitir' })).toBeNull();
+    await fireEvent.changeText(screen.getByLabelText('Nombre'), '');
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(''));
+  });
+
+  it('edición: tocar fuera de la hoja la cierra sin guardar', async () => {
+    const onClose = jest.fn();
+    const onSave = jest.fn();
+    await render(sheet({ mode: 'edit', initialName: 'Ana', onClose, onSave }));
+    await fireEvent.press(screen.getByTestId('sheet-backdrop'));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onSave).not.toHaveBeenCalled();
   });
 });
 

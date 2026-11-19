@@ -1,6 +1,19 @@
 import type { CardRecord, CategoryRecord, WalletRecord } from '@/data/types';
 import type { Account, Debt, LedgerState, Movement } from '@/domain/ledger/types';
-import { buildHomeView, maskAmount, scopeAccountIds, type HomeInput } from './presenter';
+import { buildHomeView, greetingText, maskAmount, scopeAccountIds, type HomeInput } from './presenter';
+
+describe('greetingText (D50)', () => {
+  it('sin nombre, vacío o solo espacios saluda con "Hola!"', () => {
+    expect(greetingText(null)).toBe('Hola!');
+    expect(greetingText('')).toBe('Hola!');
+    expect(greetingText('   ')).toBe('Hola!');
+  });
+
+  it('con nombre usa el formato "Hola!, <nombre>" y recorta los espacios al borde', () => {
+    expect(greetingText('Ana')).toBe('Hola!, Ana');
+    expect(greetingText('  José María ')).toBe('Hola!, José María');
+  });
+});
 
 const TODAY = '2026-11-20';
 const PERIOD = { start: '2026-11-01', end: TODAY };

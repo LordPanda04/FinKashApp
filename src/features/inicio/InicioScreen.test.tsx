@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { z } from 'zod';
 import { RepositoriesContext } from '@/data/RepositoriesContext';
 import type { CategoryRecord, WalletRecord } from '@/data/types';
 import type { Account } from '@/domain/ledger/types';
@@ -284,5 +285,83 @@ describe('InicioScreen — casos límite', () => {
     await open({ device: { hideAmounts: false, showProjection: false, homeScope: 'borrada' } });
     expect(await screen.findByRole('button', { name: 'Saldo general' })).toBeOnTheScreen();
     expect(screen.getByText('S/ 1,210.00')).toBeOnTheScreen();
+  });
+});
+
+describe('InicioScreen — nombre del usuario (D50)', () => {
+  const device = (displayName: string | null) => ({ hideAmounts: false, showProjection: false, homeScope: 'general', displayName });
+
+  it('primer arranque (sin nombre guardado): pide el nombre y, al continuar, saluda "Hola!, Ana"', async () => {
+    const fake = await open({ device: device(null) });
+    expect(await screen.findByText('¿Cómo te llamas?')).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByLabelText('Nombre'), 'Ana');
+    await fireEvent.press(screen.getByRole('button', { name: 'Continuar' }));
+    expect(await screen.findByText('Hola!, Ana')).toBeOnTheScreen();
+    expect(fake.calls.setDevice).toHaveBeenCalledWith({ displayName: 'Ana' });
+    expect(screen.queryByText('¿Cómo te llamas?')).toBeNull();
+  });
+
+  it('Omitir guarda "" y deja el saludo en "Hola!" sin volver a preguntar', async () => {
+    const fake = await open({ device: device(null) });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Omitir' }));
+    await waitFor(() => expect(screen.queryByText('¿Cómo te llamas?')).toBeNull());
+    expect(fake.calls.setDevice).toHaveBeenCalledWith({ displayName: '' });
+    expect(screen.getByText('Hola!')).toBeOnTheScreen();
+  });
+
+  it('con nombre guardado o con el nombre omitido no aparece la hoja de bienvenida', async () => {
+    await open({ device: device('Ana') });
+    expect(await screen.findByText('Hola!, Ana')).toBeOnTheScreen();
+    expect(screen.queryByText('¿Cómo te llamas?')).toBeNull();
+  });
+
+  it('con el nombre omitido ("") tampoco pregunta', async () => {
+    await open({ device: device('') });
+    expect(await screen.findByText('Hola!')).toBeOnTheScreen();
+    expect(screen.queryByText('¿Cómo te llamas?')).toBeNull();
+  });
+
+  it('tocar el saludo abre "Tu nombre" con el nombre actual y guardar lo cambia', async () => {
+    await open({ device: device('Ana') });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Editar tu nombre' }));
+    expect(await screen.findByText('Tu nombre')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Nombre').props.value).toBe('Ana');
+    await fireEvent.changeText(screen.getByLabelText('Nombre'), 'Luis');
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar' }));
+    expect(await screen.findByText('Hola!, Luis')).toBeOnTheScreen();
+  });
+
+  it('vaciar el nombre al editar vuelve al saludo "Hola!"', async () => {
+    await open({ device: device('Ana') });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Editar tu nombre' }));
+    await fireEvent.changeText(await screen.findByLabelText('Nombre'), '');
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar' }));
+    expect(await screen.findByText('Hola!')).toBeOnTheScreen();
+  });
+
+  it('un nombre de 41 caracteres muestra el error del repositorio y no se guarda', async () => {
+    await open({ device: device('Ana') });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Editar tu nombre' }));
+    await fireEvent.changeText(await screen.findByLabelText('Nombre'), 'x'.repeat(41));
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar' }));
+    expect(await screen.findByText('El nombre puede tener hasta 40 caracteres.')).toBeOnTheScreen();
+    expect(screen.getByText('Hola!, Ana')).toBeOnTheScreen();
+  });
+
+  it('un ZodError del repositorio real se muestra con su primer mensaje, no como JSON', async () => {
+    const fake = await open({ device: device('Ana') });
+    (fake.repos.settings as { setDevice: (p: unknown) => Promise<void> }).setDevice = async () => {
+      z.string().max(1, 'El nombre puede tener hasta 40 caracteres.').parse('xx');
+    };
+    await fireEvent.press(await screen.findByRole('button', { name: 'Editar tu nombre' }));
+    await fireEvent.changeText(await screen.findByLabelText('Nombre'), 'Luis');
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar' }));
+    expect(await screen.findByText('El nombre puede tener hasta 40 caracteres.')).toBeOnTheScreen();
+  });
+
+  it('un nombre largo se recorta a una línea en el saludo', async () => {
+    await open({ device: device('x'.repeat(40)) });
+    const greeting = await screen.findByText(`Hola!, ${'x'.repeat(40)}`);
+    expect(greeting.props.numberOfLines).toBe(1);
   });
 });
