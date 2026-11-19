@@ -20,7 +20,13 @@ const routes = {
   '(tabs)/_layout': TabsLayout,
   '(tabs)/index': Inicio,
   '(tabs)/historial': Historial,
-  '(tabs)/registrar': Registrar,
+  '(tabs)/registrar': function RegistrarConDatos() {
+    return (
+      <RepositoriesContext.Provider value={createFakeRepositories().repos}>
+        <Registrar />
+      </RepositoriesContext.Provider>
+    );
+  },
   '(tabs)/billeteras': function BilleterasConDatos() {
     return (
       <RepositoriesContext.Provider value={createFakeRepositories().repos}>
@@ -148,7 +154,6 @@ describe('pantallas', () => {
 
   it.each([
     ['/historial', 'Historial', 'Aquí irá el historial de movimientos.'],
-    ['/registrar', 'Registrar movimiento', 'Aquí irá el formulario para registrar movimientos.'],
   ])('%s muestra su título y su estado vacío en español', async (url, title, empty) => {
     await renderRouter(routes, { initialUrl: url });
     expect(screen.getByRole('header', { name: title })).toBeOnTheScreen();

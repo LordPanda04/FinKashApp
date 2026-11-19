@@ -31,7 +31,7 @@ export function createFakeRepositories(
   const cards: CardRecord[] = seed.cards ?? [];
   const debts: FakeDebt[] = seed.debts ?? [];
 
-  const calls = { createMovement: jest.fn(), createWithNewDebt: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn() };
+  const calls = { updateMovement: jest.fn(), removeMovement: jest.fn(), createMovement: jest.fn(), createWithNewDebt: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(), createWallet: jest.fn(), setHidden: jest.fn(), adjustWallet: jest.fn() };
 
   const repos = {
     changes,
@@ -82,6 +82,45 @@ export function createFakeRepositories(
             (!filter.categoryId || m.categoryId === filter.categoryId) &&
             (!filter.accountId || m.sourceAccountId === filter.accountId || m.destAccountId === filter.accountId),
         ),
+      get: async (id: string) => movements.find((m) => m.id === id) ?? null,
+      create: async (draft: Omit<Movement, 'id'>) => {
+        calls.createMovement(draft);
+        const r = (fake.createResult ? fake.createResult(draft) : ok({ id: `mv${nextId++}`, ...draft })) as ReturnType<typeof ok<Movement>> | ReturnType<typeof err>;
+        if (r.ok) {
+          movements.push(r.value as Movement);
+          changes.notify();
+        }
+        return r;
+      },
+      createWithNewDebt: async (draft: Omit<Movement, 'id'>, debt: unknown) => {
+        calls.createWithNewDebt(draft, debt);
+        const r = (fake.createResult ? fake.createResult(draft) : ok({ movement: { id: `mv${nextId++}`, ...draft, debtId: 'newDebt' }, debtId: 'newDebt' })) as { ok: boolean; value?: { movement: Movement } };
+        if (r.ok && r.value) {
+          movements.push(r.value.movement);
+          changes.notify();
+        }
+        return r;
+      },
+      update: async (id: string, draft: Omit<Movement, 'id'>) => {
+        calls.updateMovement(id, draft);
+        const r = (fake.updateResult ? fake.updateResult(id, draft) : ok({ id, ...draft })) as { ok: boolean; value?: Movement };
+        if (r.ok && r.value) {
+          const index = movements.findIndex((m) => m.id === id);
+          if (index >= 0) movements[index] = r.value;
+          changes.notify();
+        }
+        return r;
+      },
+      remove: async (id: string) => {
+        calls.removeMovement(id);
+        const r = (fake.removeResult ? fake.removeResult(id) : ok(undefined)) as { ok: boolean };
+        if (r.ok) {
+          const index = movements.findIndex((m) => m.id === id);
+          if (index >= 0) movements.splice(index, 1);
+          changes.notify();
+        }
+        return r;
+      },
       adjustWallet: async (input: { accountId: string; declaredMinor: number; occurredOn?: string }) => {
         calls.adjustWallet(input);
         return fakeAdjust(input);
@@ -128,6 +167,9 @@ export function createFakeRepositories(
     calls,
     changes,
     adjustResult: undefined as undefined | ((input: { accountId: string; declaredMinor: number }) => unknown),
+    createResult: undefined as undefined | ((draft: Omit<Movement, 'id'>) => unknown),
+    updateResult: undefined as undefined | ((id: string, draft: Omit<Movement, 'id'>) => unknown),
+    removeResult: undefined as undefined | ((id: string) => unknown),
   };
   return fake;
 }

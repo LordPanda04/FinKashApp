@@ -1,10 +1,5 @@
-import { EmptyState } from "@/ui/EmptyState";
-import { Screen } from "@/ui/Screen";
+import { RegistrarScreen } from "@/features/movimientos/RegistrarScreen";
 
 export default function Registrar() {
-  return (
-    <Screen title="Registrar movimiento" backdrop="primary">
-      <EmptyState message="Aquí irá el formulario para registrar movimientos." />
-    </Screen>
-  );
+  return <RegistrarScreen />;
 }
